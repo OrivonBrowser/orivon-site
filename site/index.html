@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orivon: Web3. Trustless. On-the-fly. Pick all three.</title>
+<meta name="description" content="Orivon is a desktop Web3 browser. Open a link and a desktop app, a peer-to-peer client or a whole Node.js server runs in your tab, verified on your machine and holding only the powers you grant. Early access for Linux, Windows and macOS.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#cfe6f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1030" media="(prefers-color-scheme: dark)">
+<script>
+/* Theme: ?theme=dark|light preview override, and Dark Reader detection. When the extension
+   switches on, use our own designed dark palette and tell it to stand down (darkreader-lock). */
+(function () {
+  var d = document, h = d.documentElement, forced = '';
+  try {
+    var m = /[?&]theme=(dark|light)(?:&|#|$)/.exec(location.search);
+    if (m) { forced = m[1]; h.setAttribute('data-theme', forced); }
+  } catch (e) {}
+  if (forced === 'light' || !window.MutationObserver) return;
+  var done = false, mo = null;
+  function seen() {
+    if (h.hasAttribute('data-darkreader-mode') || h.getAttribute('data-darkreader-scheme') === 'dark') return true;
+    return !!(d.head && d.head.querySelector('meta[name="darkreader"], style.darkreader'));
+  }
+  function lock() {
+    if (done) return;
+    done = true;
+    if (mo) mo.disconnect();
+    h.setAttribute('data-theme', 'dark');
+    if (!d.head.querySelector('meta[name="darkreader-lock"]')) {
+      var l = d.createElement('meta'); l.name = 'darkreader-lock'; d.head.appendChild(l);
+    }
+  }
+  function check() { if (seen()) lock(); }
+  check();
+  if (done) return;
+  mo = new MutationObserver(check);
+  mo.observe(h, { attributes: true, attributeFilter: ['data-darkreader-mode', 'data-darkreader-scheme'] });
+  mo.observe(d.head, { childList: true });
+})();
+</script>
+<link rel="icon" type="image/png" sizes="48x48" href="assets/img/icon-48.png">
+<link rel="apple-touch-icon" href="assets/img/icon-180.png">
+<link rel="canonical" href="https://www.orivonstack.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.orivonstack.com/">
+<meta property="og:title" content="Orivon: Web3. Trustless. On-the-fly. Pick all three.">
+<meta property="og:description" content="No installer. No app store. No account. No server of ours. Real Web3 apps from a link, proven on your machine, holding only the powers you grant.">
+<meta property="og:image" content="https://www.orivonstack.com/assets/img/og-newtab-1200x630.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Orivon: Web3. Trustless. On-the-fly. Pick all three.">
+<meta name="twitter:description" content="No installer. No app store. No account. No server of ours.">
+<meta name="twitter:image" content="https://www.orivonstack.com/assets/img/og-newtab-1200x630.jpg">
+<link rel="preload" href="assets/fonts/bricolage-grotesque-normal-200-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/inter-normal-100-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body id="top">
+<svg class="defs" width="0" height="0" aria-hidden="true" focusable="false"><filter id="night-cloud" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.5 0 0 0 -0.12  0 0.5 0 0 -0.1  0 0 0.55 0 -0.02  0 0 0 0.92 0"/></filter></svg>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header" id="site-header">
+  <div class="nav">
+    <a class="brand" href="#top" aria-label="Orivon, home"><img src="assets/img/icon-72.png" width="34" height="34" alt=""><span>Orivon</span></a>
+    <nav class="nav-links" id="nav-links" aria-label="Main">
+      <a href="#apps">Apps</a>
+      <a href="#features">Features</a>
+      <a href="#under-the-hood">Under the hood</a>
+      <a class="nav-dl" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>Download</a>
+    </nav>
+    <a class="nav-dl nav-dl-m" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>Download</a>
+    <button class="menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- HERO -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-sky" aria-hidden="true">
+    <img class="cloud c1" src="assets/img/cloud-a.svg" width="224" height="70" alt="">
+    <img class="cloud c2" src="assets/img/cloud-b.svg" width="238" height="84" alt="">
+    <img class="cloud c3" src="assets/img/cloud-c.svg" width="126" height="42" alt="">
+    <img class="cloud c4" src="assets/img/cloud-a.svg" width="224" height="70" alt="">
+    <div class="hero-art">
+      <img src="assets/img/meadow-art-1600.webp"
+           srcset="assets/img/meadow-art-1000.webp 1000w, assets/img/meadow-art-1600.webp 1600w, assets/img/meadow-art-2400.webp 2398w"
+           sizes="100vw" width="2398" height="1344" alt="" decoding="async">
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1 id="hero-title"><span class="l1"><span>Web3. Trustless.</span> <span>On-the-fly.</span></span> <span class="own">Pick all three.</span></h1>
+    <p class="sub"><span>No installer. No app store.</span> <span>No account. No server of ours.</span></p>
+    <div class="cta">
+      <a class="btn" data-dl="auto" href="#download">
+        <svg class="ico-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
+        <svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M4 5.5h16v13H4zM8 10l3 2.5L8 15M13 15h3.5"/></svg>
+        <span data-dl-label>Download Orivon</span>
+      </a>
+      <p class="cta-hint" data-dl="hint" hidden>Open Terminal (&#8984; Space, type Terminal), paste with &#8984; V and press Return. Orivon installs and opens itself.</p>
+      <div class="cta-meta">
+        <span class="pill">Early access</span>
+        <span data-dl="detail">For Linux, Windows and macOS</span>
+      </div>
+      <div class="cta-links">
+        <a data-dl="alt" href="#download" hidden></a>
+        <a href="#download">Other platforms</a>
+      </div>
+    </div>
+  </div>
+
+  <figure class="hero-window">
+    <img src="assets/img/newtab-meadow-1280.webp"
+         srcset="assets/img/newtab-meadow-1280.webp 1280w, assets/img/newtab-meadow-1920.webp 1920w"
+         sizes="(min-width: 1160px) 1080px, calc(100vw - 32px)"
+         width="1920" height="1032" alt="The Orivon browser window with the new tab page over a voxel mountain meadow, showing the address bar at ipfs://explore.orivonstack.eth and tiles for apps and bookmarks." fetchpriority="high">
+  </figure>
+  <div class="hero-edge" aria-hidden="true"></div>
+</section>
+
+<!-- PROOF -->
+<section class="proof" aria-label="At a glance">
+  <div class="wrap">
+    <ul>
+      <li>Active since December 2025</li>
+      <li>5 desktop apps from .eth names</li>
+      <li>0 Orivon servers</li>
+      <li>Open source, AGPL-3.0</li>
+      <li>450+ in the community</li>
+    </ul>
+  </div>
+</section>
+
+<!-- WHAT OWNING LOOKS LIKE -->
+<section class="owning" id="own" aria-labelledby="own-title">
+  <div class="wrap">
+    <div class="sec-head center">
+      <h2 id="own-title">What owning looks like</h2>
+    </div>
+
+    <article class="own-row r1">
+      <div class="own-text">
+        <svg class="num" viewBox="0 0 7.5 5.5" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="sh" d="M0.5 0.5h3v1h-3zM5.5 0.5h1v1h-1zM0.5 1.5h1v1h-1zM2.5 1.5h1v1h-1zM4.5 1.5h2v1h-2zM0.5 2.5h1v1h-1zM2.5 2.5h1v1h-1zM5.5 2.5h1v1h-1zM0.5 3.5h1v1h-1zM2.5 3.5h1v1h-1zM5.5 3.5h1v1h-1zM0.5 4.5h3v1h-3zM4.5 4.5h3v1h-3z"/><path class="fc" d="M0 0h3v1h-3zM5 0h1v1h-1zM0 1h1v1h-1zM2 1h1v1h-1zM4 1h2v1h-2zM0 2h1v1h-1zM2 2h1v1h-1zM5 2h1v1h-1zM0 3h1v1h-1zM2 3h1v1h-1zM5 3h1v1h-1zM0 4h3v1h-3zM4 4h3v1h-3z"/></svg>
+        <h3><span class="o">Own</span> what you see</h3>
+        <p>A <code>.eth</code> name is proven by a light client on your machine, and every IPFS block is checked against its hash. Servers can withhold. They can't lie.</p>
+      </div>
+      <div class="stage">
+        <div class="receipt-wrap"><div class="receipt" role="img" aria-label="Example: ipfs://thelounge.orivonstack.eth, name proven by a light client, every block hashed against its CID, running from local cache, pinned.">
+          <div class="rh">thelounge.orivonstack.eth</div>
+          <ul>
+            <li><i><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="m3 8.5 3.2 3L13 4.5"/></svg></i>Name proven by a light client on your machine</li>
+            <li><i><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="m3 8.5 3.2 3L13 4.5"/></svg></i>Every block hashed against its CID</li>
+            <li><i><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="m3 8.5 3.2 3L13 4.5"/></svg></i>Running from local cache, pinned</li>
+          </ul>
+          <div class="rf">Proven at block 26,134,799 when installed</div>
+        </div>
+        <p class="fine">What Orivon checked before this page loaded.</p></div>
+      </div>
+    </article>
+
+    <article class="own-row r2 flip">
+      <div class="own-text">
+        <svg class="num" viewBox="0 0 7.5 5.5" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="sh" d="M0.5 0.5h3v1h-3zM4.5 0.5h3v1h-3zM0.5 1.5h1v1h-1zM2.5 1.5h1v1h-1zM6.5 1.5h1v1h-1zM0.5 2.5h1v1h-1zM2.5 2.5h1v1h-1zM4.5 2.5h3v1h-3zM0.5 3.5h1v1h-1zM2.5 3.5h1v1h-1zM4.5 3.5h1v1h-1zM0.5 4.5h3v1h-3zM4.5 4.5h3v1h-3z"/><path class="fc" d="M0 0h3v1h-3zM4 0h3v1h-3zM0 1h1v1h-1zM2 1h1v1h-1zM6 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM4 2h3v1h-3zM0 3h1v1h-1zM2 3h1v1h-1zM4 3h1v1h-1zM0 4h3v1h-3zM4 4h3v1h-3z"/></svg>
+        <h3><span class="o">Own</span> what apps can do</h3>
+        <p>An app lists what it needs, and you read it in plain words and decide. Whatever it didn't declare, it can never get, not even from you.</p>
+      </div>
+      <div class="stage">
+        <div class="perm-shot"><img src="assets/img/permissions-popover.webp" width="380" height="460" loading="lazy" decoding="async" alt="The address-bar popover for thelounge.orivonstack.eth, listing each permission in plain words with a toggle beside it."></div>
+      </div>
+    </article>
+
+    <article class="own-row r3 trust-row">
+      <div class="own-text">
+        <svg class="num" viewBox="0 0 7.5 5.5" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="sh" d="M0.5 0.5h3v1h-3zM4.5 0.5h3v1h-3zM0.5 1.5h1v1h-1zM2.5 1.5h1v1h-1zM6.5 1.5h1v1h-1zM0.5 2.5h1v1h-1zM2.5 2.5h1v1h-1zM4.5 2.5h3v1h-3zM0.5 3.5h1v1h-1zM2.5 3.5h1v1h-1zM6.5 3.5h1v1h-1zM0.5 4.5h3v1h-3zM4.5 4.5h3v1h-3z"/><path class="fc" d="M0 0h3v1h-3zM4 0h3v1h-3zM0 1h1v1h-1zM2 1h1v1h-1zM6 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM4 2h3v1h-3zM0 3h1v1h-1zM2 3h1v1h-1zM6 3h1v1h-1zM0 4h3v1h-3zM4 4h3v1h-3z"/></svg>
+        <h3><span class="o">Own</span> who you trust</h3>
+        <p>A shield in the address bar tells you what you're on: plain Web2, content you can verify, or open and trustless Web3. You choose who does the scoring.</p>
+      </div>
+      <div class="stage">
+        <div class="xp">
+          <img class="explore-win" src="assets/img/explore-full-1280.webp" srcset="assets/img/explore-full-960.webp 960w, assets/img/explore-full-1280.webp 1280w, assets/img/explore-full-1920.webp 1920w" sizes="(min-width: 901px) 650px, calc(100vw - 80px)" width="1920" height="1032" loading="lazy" decoding="async" alt="Orivon Explore listing Web3 sites such as ENS Interviews, RicMoo and Raffy, each card with its Web3 badge, beside a category list.">
+          <div class="score-card"><img src="assets/img/score-popover.webp" width="380" height="461" loading="lazy" decoding="async" alt="The Web3 Score popover, with levels L1 to L4 and what each one means."></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="own-row r4 flip">
+      <div class="own-text">
+        <svg class="num" viewBox="0 0 7.5 5.5" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="sh" d="M0.5 0.5h3v1h-3zM4.5 0.5h1v1h-1zM6.5 0.5h1v1h-1zM0.5 1.5h1v1h-1zM2.5 1.5h1v1h-1zM4.5 1.5h1v1h-1zM6.5 1.5h1v1h-1zM0.5 2.5h1v1h-1zM2.5 2.5h1v1h-1zM4.5 2.5h3v1h-3zM0.5 3.5h1v1h-1zM2.5 3.5h1v1h-1zM6.5 3.5h1v1h-1zM0.5 4.5h3v1h-3zM6.5 4.5h1v1h-1z"/><path class="fc" d="M0 0h3v1h-3zM4 0h1v1h-1zM6 0h1v1h-1zM0 1h1v1h-1zM2 1h1v1h-1zM4 1h1v1h-1zM6 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM4 2h3v1h-3zM0 3h1v1h-1zM2 3h1v1h-1zM6 3h1v1h-1zM0 4h3v1h-3zM6 4h1v1h-1z"/></svg>
+        <h3><span class="o">Own</span> your data</h3>
+        <p>No account, no cloud, no sync service. Your keys and data stay on your machine.</p>
+      </div>
+      <div class="stage">
+        <div class="zero">
+          <span class="big"><svg viewBox="0 0 7.5 9.5" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="sh" d="M2.5 0.5h3v1h-3zM1.5 1.5h5v1h-5zM0.5 2.5h2v1h-2zM5.5 2.5h2v1h-2zM0.5 3.5h2v1h-2zM5.5 3.5h2v1h-2zM0.5 4.5h2v1h-2zM5.5 4.5h2v1h-2zM0.5 5.5h2v1h-2zM5.5 5.5h2v1h-2zM0.5 6.5h2v1h-2zM5.5 6.5h2v1h-2zM1.5 7.5h5v1h-5zM2.5 8.5h3v1h-3z"/><path class="fc" d="M2 0h3v1h-3zM1 1h5v1h-5zM0 2h2v1h-2zM5 2h2v1h-2zM0 3h2v1h-2zM5 3h2v1h-2zM0 4h2v1h-2zM5 4h2v1h-2zM0 5h2v1h-2zM5 5h2v1h-2zM0 6h2v1h-2zM5 6h2v1h-2zM1 7h5v1h-5zM2 8h3v1h-3z"/></svg><span class="sr">0</span></span>
+          <span class="cap">Orivon servers</span>
+          <span class="neg">Usage statistics only if you say yes.</span>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- READ WRITE OWN -->
+<section class="rise rwo" id="read-write-own" aria-labelledby="rwo-title">
+  <img class="cloud c1" src="assets/img/cloud-b.svg" width="238" height="84" alt="" aria-hidden="true">
+  <img class="cloud c2" src="assets/img/cloud-c.svg" width="126" height="42" alt="" aria-hidden="true">
+  <div class="wrap">
+    <h2 class="sr" id="rwo-title">Read. Write. Own.</h2>
+    <div class="rwo-grid">
+      <div class="tile read"><span class="gen">Web1</span><span class="word">Read.</span><p>You could look.</p></div>
+      <div class="tile write"><span class="gen">Web2</span><span class="word">Write.</span><p>You could post, on someone else's servers.</p></div>
+      <div class="tile own"><span class="gen">Web3</span><span class="word">Own.</span><p>The name, the code, the keys and the decision are yours.</p></div>
+    </div>
+    <p class="rwo-line">Orivon is the first browser <b>built for owning.</b></p>
+  </div>
+  <div class="rwo-ground" aria-hidden="true"></div>
+</section>
+
+<!-- APPS -->
+<section class="apps" id="apps" aria-labelledby="apps-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="apps-title">Open these in Orivon</h2>
+    </div>
+    <div class="apps-grid">
+      <article class="app">
+        <div class="app-top"><span class="app-logo"><img src="assets/img/logos/freetube.png" width="34" height="34" alt="" loading="lazy" decoding="async"></span><h3><a href="https://freetube.orivonstack.eth.limo" rel="noopener">FreeTube</a></h3></div>
+        <p>The private YouTube desktop client.</p>
+        <span class="eth">freetube.orivonstack.eth</span>
+      </article>
+      <article class="app">
+        <div class="app-top"><span class="app-logo"><img src="assets/img/logos/element.svg" width="34" height="34" alt="" loading="lazy" decoding="async"></span><h3><a href="https://element.orivonstack.eth.limo" rel="noopener">Element</a></h3></div>
+        <p>End-to-end encrypted Matrix chat, nothing to install.</p>
+        <span class="eth">element.orivonstack.eth</span>
+      </article>
+      <article class="app">
+        <div class="app-top"><span class="app-logo"><img src="assets/img/logos/thelounge.svg" width="40" height="28" alt="" style="width:38px;height:auto" loading="lazy" decoding="async"></span><h3><a href="https://thelounge.orivonstack.eth.limo" rel="noopener">The Lounge</a></h3></div>
+        <p>An IRC client whose own Node.js server runs inside your tab.</p>
+        <span class="eth">thelounge.orivonstack.eth</span>
+      </article>
+      <article class="app">
+        <div class="app-top"><span class="app-logo"><img src="assets/img/logos/airgap.svg" width="34" height="34" alt="" loading="lazy" decoding="async"></span><h3><a href="https://airgapvault.orivonstack.eth.limo" rel="noopener">AirGap Vault</a></h3></div>
+        <p>Secret storage for offline signing.</p>
+        <span class="eth">airgapvault.orivonstack.eth</span>
+      </article>
+      <article class="app">
+        <div class="app-top"><span class="app-logo"><img src="assets/img/logos/thorchain.png" width="34" height="34" alt="" loading="lazy" decoding="async"></span><h3><a href="https://asgardex.orivonstack.eth.limo" rel="noopener">ASGARDEX</a></h3></div>
+        <p>THORChain wallet and cross-chain swaps.</p>
+        <span class="eth">asgardex.orivonstack.eth</span>
+      </article>
+      <article class="app">
+        <div class="app-top"><span class="app-logo"><img src="assets/img/icon-72.png" width="34" height="34" alt="" loading="lazy" decoding="async"></span><h3><a href="https://explore.orivonstack.eth.limo" rel="noopener">Orivon Explore</a></h3></div>
+        <p>A directory of Web3 sites, each with its Web3 Score.</p>
+        <span class="eth">explore.orivonstack.eth</span>
+      </article>
+    </div>
+    <p class="apps-note"><span class="pill">Early access</span> Keep funds you can't afford to lose out of ported wallets for now.</p>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="rise features" id="features" aria-labelledby="feat-title">
+  <div class="wrap">
+    <div class="sec-head center">
+      <h2 id="feat-title">Still yours after you say yes</h2>
+    </div>
+    <div class="feat-grid">
+      <article class="feat"><span class="voxel-badge v" aria-hidden="true"><svg class="pix" viewBox="0 0 8 8" width="24" height="24" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 2h8v1h-8zM0 3h1v2h-1zM7 3h1v2h-1zM0 5h8v1h-8zM5 3h2v2h-2z"/></svg></span><div><h3>Switch any power off</h3><p>Every grant shows in the address bar. Turn any of it off, any time.</p></div></article>
+      <article class="feat"><span class="voxel-badge" aria-hidden="true"><svg class="pix" viewBox="0 0 8 8" width="24" height="24" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path fill="currentColor" d="M2 0h4v1h-4zM1 1h2v1h-2zM5 1h2v1h-2zM1 2h2v1h-2zM5 2h2v1h-2zM0 3h8v1h-8zM0 4h3v1h-3zM5 4h3v1h-3zM0 5h3v1h-3zM5 5h3v1h-3zM0 6h8v1h-8zM0 7h8v1h-8z"/></svg></span><div><h3>Apps never change behind your back</h3><p>An app keeps the version you accepted until you agree to a new one.</p></div></article>
+    </div>
+  </div>
+</section>
+
+<!-- EVERYDAY -->
+<section class="rise everyday" id="everyday" aria-labelledby="everyday-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="everyday-title">Your everyday browser, too</h2>
+      <p class="lede">Built to be lived in, not opened only when you need a dapp.</p>
+    </div>
+    <ul class="everyday-grid">
+      <li><h3>Full uBlock Origin</h3><p>The complete MV2 version, the one Chrome no longer runs.</p></li>
+      <li><h3>Chrome extensions</h3><p>From the Chrome Web Store, a .crx or a folder.</p></li>
+      <li><h3>Profiles and private windows</h3><p>Each one a separate browser.</p></li>
+      <li><h3>Tabs that scale</h3><p>Groups, split view, sleeping tabs, session restore.</p></li>
+      <li><h3>Private by default</h3><p>Global Privacy Control, HTTPS-only, DNS over HTTPS, third-party cookies blocked.</p></li>
+      <li><h3>Bring your bookmarks</h3><p>Import from Chrome, Edge or Firefox. Passwords stay in your OS keyring.</p></li>
+    </ul>
+    <div class="everyday-foot">
+      <span class="chip-os"><i></i>Linux first. Native on X11 and Wayland, with Windows and macOS too.</span>
+      <p class="wallet-line">Your wallet extension works here as it does in Chrome. A native wallet, with its own security model, is on the way.</p>
+    </div>
+  </div>
+</section>
+
+<!-- UNDER THE HOOD -->
+<section class="rise hood" id="under-the-hood" aria-labelledby="hood-title">
+  <div class="wrap hood-grid">
+    <div>
+      <h2 id="hood-title">What the web forbids, granted by you</h2>
+      <ul>
+        <li><b>A capability broker checks everything</b>Every socket, file and signature is checked against your grant, on every call.</li>
+        <li><b>Real sockets from a page</b>TCP, TLS and UDP: <code>connect</code>, <code>connectSecure</code>, <code>listen</code>, <code>udpBind</code>.</li>
+        <li><b>Your Node.js app, unchanged</b>The Lounge's own Express, Socket.IO and SQLite server runs inside the tab.</li>
+        <li><b>Native code only as WebAssembly</b>Addons load as WebAssembly and programs run as WASI.</li>
+      </ul>
+      <a class="more" href="https://github.com/OrivonBrowser/orivon-mvp/blob/main/ARCHITECTURE.md" rel="noopener">Read the architecture &rarr;</a>
+    </div>
+    <div class="code" role="group" aria-label="Example app manifest">
+      <div class="code-bar"><i></i><i></i><i></i><span>manifest.json</span></div>
+<pre><code>{
+  <span class="k">"orivonApiVersion"</span><span class="p">:</span> <span class="n">0</span>,
+  <span class="k">"id"</span><span class="p">:</span> <span class="s">"chat.example.irc"</span>,
+  <span class="k">"name"</span><span class="p">:</span> <span class="s">"My IRC client"</span>,
+  <span class="k">"version"</span><span class="p">:</span> <span class="s">"1.0.0"</span>,
+  <span class="k">"entry"</span><span class="p">:</span> <span class="s">"index.html"</span>,
+  <span class="k">"capabilities"</span><span class="p">:</span> { <span class="k">"net"</span><span class="p">:</span> { <span class="k">"https"</span><span class="p">:</span> {
+    <span class="k">"connect"</span><span class="p">:</span> [<span class="s">"irc.libera.chat:6697"</span>]
+  } } }
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- LOGO WALL -->
+<section class="rise wall" id="networks" aria-labelledby="wall-title">
+  <div class="wrap">
+    <div class="sec-head center">
+      <h2 id="wall-title">Speaks the networks. Runs the apps.</h2>
+    </div>
+    <div class="wall-row">
+      <span class="wall-label">Speaks</span>
+      <a class="logo-tile" href="https://ethereum.org" rel="noopener"><span class="lg"><img src="assets/img/logos/ethereum.svg" width="40" height="40" alt="" style="--h:42px" loading="lazy" decoding="async"></span><span>Ethereum</span></a>
+      <a class="logo-tile" href="https://ens.domains" rel="noopener"><span class="lg"><img src="assets/img/logos/ens.svg" width="40" height="40" alt="" style="--h:42px" loading="lazy" decoding="async"></span><span>ENS</span></a>
+      <a class="logo-tile" href="https://ipfs.tech" rel="noopener"><span class="lg"><img src="assets/img/logos/ipfs.svg" width="40" height="40" alt="" style="--h:46px" loading="lazy" decoding="async"></span><span>IPFS</span></a>
+      <a class="logo-tile" href="https://github.com/a16z/helios" rel="noopener"><span class="lg"><img src="assets/img/logos/helios.svg" width="44" height="44" alt="" style="--h:46px" loading="lazy" decoding="async"></span><span>Helios</span></a>
+      <a class="logo-tile" href="https://eth.limo" rel="noopener"><span class="lg"><img class="r" src="assets/img/logos/ethlimo.png" width="40" height="40" alt="" style="--h:34px" loading="lazy" decoding="async"></span><span>eth.limo</span></a>
+    </div>
+    <div class="wall-row">
+      <span class="wall-label">Runs</span>
+      <a class="logo-tile" href="https://thorchain.org" rel="noopener"><span class="lg"><img src="assets/img/logos/thorchain.png" width="44" height="44" alt="" style="--h:38px" loading="lazy" decoding="async"></span><span>THORChain</span></a>
+      <a class="logo-tile" href="https://airgap.it" rel="noopener"><span class="lg"><img src="assets/img/logos/airgap.svg" width="40" height="40" alt="" style="--h:44px" loading="lazy" decoding="async"></span><span>AirGap</span></a>
+      <a class="logo-tile" href="https://element.io" rel="noopener"><span class="lg"><img src="assets/img/logos/element.svg" width="44" height="44" alt="" style="--h:44px" loading="lazy" decoding="async"></span><span>Element</span></a>
+      <a class="logo-tile" href="https://freetubeapp.io" rel="noopener"><span class="lg"><img src="assets/img/logos/freetube.png" width="40" height="40" alt="" style="--h:40px" loading="lazy" decoding="async"></span><span>FreeTube</span></a>
+      <a class="logo-tile" href="https://thelounge.chat" rel="noopener"><span class="lg"><img src="assets/img/logos/thelounge.svg" width="56" height="39" alt="" style="--h:38px" loading="lazy" decoding="async"></span><span>The Lounge</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section class="mission" aria-label="Mission">
+  <img class="cloud c1" src="assets/img/cloud-a.svg" width="224" height="70" alt="" aria-hidden="true">
+  <img class="cloud c2" src="assets/img/cloud-c.svg" width="126" height="42" alt="" aria-hidden="true">
+  <img class="sun" src="assets/img/sun.svg" width="156" height="156" alt="" aria-hidden="true">
+  <img class="moon" src="assets/img/moon.svg" width="156" height="156" alt="" aria-hidden="true">
+  <div class="wrap">
+    <p>We want to make Web3 <mark>accessible to everyone.</mark></p>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section class="download" id="download" aria-labelledby="dl-title">
+  <div class="wrap">
+    <div class="sec-head center" style="margin-bottom:0">
+      <h2 id="dl-title">Download Orivon</h2>
+      <div class="dl-meta">
+        <span>Version <strong data-dl-version>v0.0.1</strong></span>
+        <span class="pill">Early access</span>
+        <span class="dl-links"><a data-dl-notes href="https://github.com/OrivonBrowser/orivon-mvp/releases/tag/v0.0.1" rel="noopener">What's new</a>
+        <a data-dl-source href="https://github.com/OrivonBrowser/orivon-mvp/tree/v0.0.1" rel="noopener">Source code</a></span>
+      </div>
+    </div>
+
+    <div class="dl-tabs" role="tablist" aria-label="Choose your system" hidden>
+      <button class="dl-tab" type="button" role="tab" id="tab-win" data-tab="win" aria-selected="false" aria-controls="panel-win" tabindex="-1">
+        <svg class="cube" viewBox="0 0 48 48" aria-hidden="true"><path fill="#cfe6f7" d="M24 3l19 10.5L24 24 5 13.5z"/><path fill="#1fb4ff" d="M5 13.5L24 24v21L5 34.5z"/><path fill="#458aff" d="M43 13.5V34.5L24 45V24z"/></svg>
+        <span class="t-name">Windows</span><span class="chip">Detected</span>
+      </button>
+      <button class="dl-tab" type="button" role="tab" id="tab-mac" data-tab="mac" aria-selected="false" aria-controls="panel-mac" tabindex="-1">
+        <svg class="cube" viewBox="0 0 48 48" aria-hidden="true"><path fill="#c9b8ff" d="M24 3l19 10.5L24 24 5 13.5z"/><path fill="#7d5cf0" d="M5 13.5L24 24v21L5 34.5z"/><path fill="#5f3fd9" d="M43 13.5V34.5L24 45V24z"/></svg>
+        <span class="t-name">macOS</span><span class="chip">Detected</span>
+      </button>
+      <button class="dl-tab" type="button" role="tab" id="tab-linux" data-tab="linux" aria-selected="false" aria-controls="panel-linux" tabindex="-1">
+        <svg class="cube" viewBox="0 0 48 48" aria-hidden="true"><path fill="#a6d17a" d="M24 3l19 10.5L24 24 5 13.5z"/><path fill="#3f7d3a" d="M5 13.5L24 24v21L5 34.5z"/><path fill="#2f6330" d="M43 13.5V34.5L24 45V24z"/></svg>
+        <span class="t-name">Linux</span><span class="chip">Detected</span>
+      </button>
+    </div>
+
+    <div class="dl-panels">
+
+      <!-- WINDOWS -->
+      <article class="dl-panel" id="panel-win" data-dl-os="win" aria-labelledby="h-win">
+        <div class="dl-head">
+          <svg class="cube" viewBox="0 0 48 48" aria-hidden="true"><path fill="#cfe6f7" d="M24 3l19 10.5L24 24 5 13.5z"/><path fill="#1fb4ff" d="M5 13.5L24 24v21L5 34.5z"/><path fill="#458aff" d="M43 13.5V34.5L24 45V24z"/></svg>
+          <h3 id="h-win">Windows</h3><span class="chip">Detected</span>
+        </div>
+        <p class="req">Windows 10 (version 1809) or newer &middot; x64</p>
+        <div class="dl-cols">
+          <div class="dl-rec">
+            <p class="dl-tag">Recommended</p>
+            <h4>Microsoft Store</h4>
+            <p class="dl-line">Signed by Microsoft, installs in one click, updates itself.</p>
+            <a class="btn store-btn" data-dl-store href="https://apps.microsoft.com/search?query=Orivon%20Browser" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8.5h14l-1.1 11H6.1zM9 8.5V7a3 3 0 0 1 6 0v1.5"/><path d="M9.3 11.6h2.2v2.2H9.3zM12.6 11.6h2.2v2.2h-2.2zM9.3 14.9h2.2v2.2H9.3zM12.6 14.9h2.2v2.2h-2.2z" fill="currentColor" stroke-width="0"/></svg>
+              <span>Get it from Microsoft Store</span>
+            </a>
+            <p class="dl-fine">In the Store, press Get, then Open.</p>
+          </div>
+
+          <div class="dl-other">
+            <p class="dl-tag plain">Other ways</p>
+            <div class="way">
+              <h4>winget</h4>
+              <div class="cmd">
+                <code id="cmd-winget">winget install Orivon.Browser.Preview</code>
+                <button class="copy" type="button" data-copy-from="cmd-winget" aria-label="Copy the winget command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6v3H9zM7 5.5H5.5v14h13v-14H17"/></svg><span>Copy</span></button>
+              </div>
+              <p class="dl-fine">Run it in Terminal or PowerShell.</p>
+            </div>
+            <div class="way">
+              <h4>Installer (.exe)</h4>
+              <a class="pkg" data-dl-asset="win-x64" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.1/Orivon-Setup-0.0.1-x64.exe"><span>Installer .exe<small>x64</small></span><span class="sz"><span data-dl-size="win-x64">123 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+              <p class="dl-fine">Per-user install, no administrator needed.</p>
+            </div>
+          </div>
+        </div>
+        <div class="ss">
+        <div class="ss-copy"><h4>Using the installer?</h4><p class="ss-text">The installer isn&rsquo;t signed yet, so Windows may show &ldquo;Windows protected your PC&rdquo;. Click <strong>More info</strong>, then <strong>Run anyway</strong>.</p></div>
+        <div class="ss-frames" role="img" aria-label="Two steps on the Windows SmartScreen window. Step 1: click the More info link. Step 2: click the Run anyway button.">
+          <div class="ss-step" aria-hidden="true">
+            <div class="ss-win">
+              <div class="ss-title">Windows protected your PC</div>
+              <div class="ss-body">Microsoft Defender SmartScreen prevented an unrecognised app from starting.</div>
+              <div class="ss-more"><u>More info</u><i class="ss-mk">1</i></div>
+              <div class="ss-btns"><b class="ss-btn">Don&rsquo;t run</b></div>
+            </div>
+            <p class="ss-cap"><i>1</i> Click More info</p>
+          </div>
+          <div class="ss-step" aria-hidden="true">
+            <div class="ss-win">
+              <div class="ss-title">Windows protected your PC</div>
+              <div class="ss-body ss-kv"><span>App: Orivon-Setup-&hellip;-x64.exe</span><span>Publisher: Unknown publisher</span></div>
+              <div class="ss-btns"><b class="ss-btn run">Run anyway<i class="ss-mk">2</i></b><b class="ss-btn">Don&rsquo;t run</b></div>
+            </div>
+            <p class="ss-cap"><i>2</i> Click Run anyway</p>
+          </div>
+        </div>
+              </div>
+      </article>
+
+      <!-- MACOS -->
+      <article class="dl-panel" id="panel-mac" data-dl-os="mac" aria-labelledby="h-mac">
+        <div class="dl-head">
+          <svg class="cube" viewBox="0 0 48 48" aria-hidden="true"><path fill="#c9b8ff" d="M24 3l19 10.5L24 24 5 13.5z"/><path fill="#7d5cf0" d="M5 13.5L24 24v21L5 34.5z"/><path fill="#5f3fd9" d="M43 13.5V34.5L24 45V24z"/></svg>
+          <h3 id="h-mac">macOS</h3><span class="chip">Detected</span>
+        </div>
+        <p class="req">macOS 13 Ventura or newer &middot; Apple silicon or Intel</p>
+        <div class="dl-cols mac">
+          <div class="dl-rec">
+            <p class="dl-tag">Recommended</p>
+            <h4>One command in Terminal</h4>
+            <div class="cmd">
+              <code id="cmd-mac">curl -fsSL https://raw.githubusercontent.com/<wbr>OrivonBrowser/<wbr>orivon-mvp/<wbr>main/<wbr>scripts/<wbr>install-macos.sh <span class="nb">| bash</span></code>
+              <button class="copy" type="button" data-copy-from="cmd-mac" aria-label="Copy the install command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6v3H9zM7 5.5H5.5v14h13v-14H17"/></svg><span>Copy</span></button>
+            </div>
+            <ol class="steps">
+              <li><span class="n">1</span><span>Open Terminal: press <kbd>&#8984;</kbd> <kbd>Space</kbd>, type <kbd>Terminal</kbd>, press <kbd>Return</kbd>.</span></li>
+              <li><span class="n">2</span><span>Paste the command with <kbd>&#8984;</kbd> <kbd>V</kbd> and press <kbd>Return</kbd>.</span></li>
+              <li><span class="n">3</span><span>Orivon installs into Applications and opens. No password needed.</span></li>
+            </ol>
+            <p class="dl-fine">The script picks the right build for Apple silicon or Intel, checks the download&rsquo;s SHA-256 against the digest GitHub publishes, never uses sudo, and opens without a Gatekeeper prompt. <a href="https://github.com/OrivonBrowser/orivon-mvp/blob/main/scripts/install-macos.sh" rel="noopener">Read the script</a>.</p>
+          </div>
+
+          <div class="dl-other">
+            <p class="dl-tag plain">Other ways</p>
+            <div class="way">
+              <h4>Disk image (.dmg)</h4>
+              <a class="pkg" data-dl-asset="mac-arm64" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.1/Orivon-0.0.1-arm64.dmg"><span>.dmg<small>Apple silicon</small></span><span class="sz"><span data-dl-size="mac-arm64">146 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+              <a class="pkg" data-dl-asset="mac-x64" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.1/Orivon-0.0.1-x64.dmg"><span>.dmg<small>Intel</small></span><span class="sz"><span data-dl-size="mac-x64">153 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+              <p class="dl-fine">First open: System Settings &rarr; Privacy &amp; Security &rarr; Open Anyway.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- LINUX -->
+      <article class="dl-panel" id="panel-linux" data-dl-os="linux" aria-labelledby="h-linux">
+        <div class="dl-head">
+          <svg class="cube" viewBox="0 0 48 48" aria-hidden="true"><path fill="#a6d17a" d="M24 3l19 10.5L24 24 5 13.5z"/><path fill="#3f7d3a" d="M5 13.5L24 24v21L5 34.5z"/><path fill="#2f6330" d="M43 13.5V34.5L24 45V24z"/></svg>
+          <h3 id="h-linux">Linux</h3><span class="chip">Detected</span>
+        </div>
+        <p class="req">x64 &middot; Debian and Ubuntu, or any distro</p>
+        <div class="dl-cols">
+          <div class="dl-rec">
+            <p class="dl-tag">Recommended</p>
+            <h4>Debian package</h4>
+            <p class="dl-line">For Debian, Ubuntu and their relatives. Open it with your software installer.</p>
+            <a class="pkg" data-dl-asset="linux-deb" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.1/orivon_0.0.1_amd64.deb"><span>.deb<small>Debian, Ubuntu</small></span><span class="sz"><span data-dl-size="linux-deb">112 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+          </div>
+          <div class="dl-other">
+            <p class="dl-tag plain">Other ways</p>
+            <div class="way">
+              <h4>AppImage</h4>
+              <a class="pkg" data-dl-asset="linux-appimage" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.1/Orivon-0.0.1-x86_64.AppImage"><span>AppImage<small>Any distro</small></span><span class="sz"><span data-dl-size="linux-appimage">144 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+              <p class="dl-fine">The AppImage may need libfuse2.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+    <p class="sr" id="dl-live" role="status" aria-live="polite"></p>
+
+    <details class="nerd">
+      <summary>Checksums and IPFS CID</summary>
+      <dl>
+        <dt>.deb</dt><dd data-dl-sha="linux-deb" data-full>0358401ddb3e179e7f847c9f312b9001b09c91488d6e8c86a60c4c5003e2fac9</dd>
+        <dt>AppImage</dt><dd data-dl-sha="linux-appimage" data-full>7501482adafa5da2d2a07240b8edc90275ee30a0be4d32b442e49ecde92b3efc</dd>
+        <dt>Windows</dt><dd data-dl-sha="win-x64" data-full>aae74adbfd74f89a59862eb8621d73e5b4b373c81a41242af85d551e1a8667c3</dd>
+        <dt>macOS arm64</dt><dd data-dl-sha="mac-arm64" data-full>da1366157a8b0fc38c393558aac05182078315e73c8e5d14b60fe6df2ff3d1e8</dd>
+        <dt>macOS x64</dt><dd data-dl-sha="mac-x64" data-full>d5536a64284c14c107958adb873666c07631e8ae915aaf6b398aa3c4e49be9bf</dd>
+        <dt>IPFS CID</dt><dd><span data-dl-ipfs>ipfs://bafybe…sbha</span></dd>
+      </dl>
+    </details>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="horizon" aria-hidden="true"></div>
+  <div class="footer-body"><div class="wrap footer-in">
+    <a class="brand" href="#top" aria-label="Orivon, back to top"><img src="assets/img/icon-72.png" width="34" height="34" alt=""><span>Orivon</span></a>
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="https://docs.orivonstack.com" rel="noopener">Docs</a></li>
+        <li><a href="https://github.com/OrivonBrowser/orivon-mvp" rel="noopener">GitHub</a></li>
+        <li><a href="https://discord.gg/DuRg87MvgD" rel="noopener">Discord</a></li>
+        <li><a href="https://x.com/OrivonBrowser" rel="noopener">X</a></li>
+        <li><a href="https://t.me/OrivonBrowser" rel="noopener">Telegram</a></li>
+        <li><a href="https://github.com/OrivonBrowser/orivon-mvp/blob/main/PRIVACY.md" rel="noopener">Privacy notice</a></li>
+        <li><a href="https://github.com/OrivonBrowser/orivon-mvp/blob/main/SECURITY.md" rel="noopener">Security policy</a></li>
+      </ul>
+    </nav>
+    <small>© 2026 Orivon · Open source under AGPL-3.0</small>
+  </div></div>
+</footer>
+
+<script src="assets/js/orivon-download.js" defer></script>
+<script src="assets/js/site.js" defer></script>
+</body>
+</html>
