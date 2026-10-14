@@ -1,7 +1,7 @@
 /*!
  * orivon-download.js  -  shared OS-detecting download wiring for the Orivon sites.
  * Vanilla JS, no dependencies, ES2019, IIFE, safe with <script defer>. Include once per page.
- * Works with a baked v0.0.1 fallback immediately, then upgrades to the live GitHub release
+ * Works with a baked fallback release (TAG below) immediately, then upgrades to the live GitHub release
  * (api.github.com, 4 s timeout, cached 15 min in sessionStorage). Without JS the page keeps
  * whatever static hrefs you wrote (hero -> #download, packages -> baked URLs, Store -> web link).
  *
@@ -12,21 +12,23 @@
  *
  * DATA-ATTRIBUTE API (all optional, any element, any number of each)
  *   [data-dl="auto"]     Hero button. Its href and action depend on the detected OS:
- *                          win     href = the Microsoft Store app link (ms-windows-store://pdp/...), text unchanged.
+ *                          win     href = the .exe installer, text unchanged. A click downloads it and reveals
+ *                                  [data-dl="hint"][data-for="win"] (the SmartScreen steps).
  *                          mac     a copy action: a click copies MAC_CMD (href stays #download as the fallback if
  *                                  copying is impossible). Label -> "Copy install command", then "Copied. Paste it
- *                                  in Terminal" for 4 s, and [data-dl="hint"] is revealed.
+ *                                  in Terminal" for 4 s, and [data-dl="hint"][data-for="mac"] is revealed.
  *                          linux   href = the .deb.   mobile/unknown: href "#download", text unchanged.
- *                        Gets data-dl-platform and data-dl-mode (store | copy | file | page). The label is the
+ *                        Gets data-dl-platform and data-dl-mode (copy | file | page). The label is the
  *                        child [data-dl-label] (text only changes on mac); icons: child .ico-dl and .ico-copy.
- *   [data-dl="detail"]   Text: win "Free on the Microsoft Store · Windows 10 and 11"; mac the shortened command
+ *   [data-dl="detail"]   Text: win "v0.0.5 · Windows · .exe · 134 MB"; mac the shortened command
  *                        "curl -fsSL …/install-macos.sh | bash" (class is-cmd, title = full command);
- *                        linux "v0.0.1 · Linux · .deb · 112 MB"; mobile: "A desktop browser for Linux,
+ *                        linux "v0.0.5 · Linux · .deb · 122 MB"; mobile: "A desktop browser for Linux,
  *                        Windows and macOS"; unknown: "For Linux, Windows and macOS".
- *   [data-dl="alt"]      Secondary choice. win: "winget or installer" -> #download; mac: "Prefer a .dmg?" -> the
- *                        .dmg for this Mac (Apple silicon or Intel); linux: "AppImage for any distro".
+ *   [data-dl="alt"]      Secondary choice. win: "winget or Microsoft Store" -> #download; mac: "Prefer a .dmg?" ->
+ *                        the .dmg for this Mac (Apple silicon or Intel); linux: "AppImage for any distro".
  *                        Otherwise hidden=true; when shown the hidden attribute is removed.
- *   [data-dl="hint"]     Terminal hint under the hero button; hidden until the mac command was copied.
+ *   [data-dl="hint"]     Hint under the hero button for the OS in its data-for (win | mac, default mac); hidden
+ *                        until the hero was used on that OS (win: the download started; mac: the command copied).
  *   [data-dl="note"]     First-run hint. win: "The installer isn't signed yet: More info → Run anyway."
  *                        mac: "First open: System Settings → Privacy & Security → Open Anyway."
  *                        else empty string.
@@ -39,14 +41,15 @@
  *   [data-dl-os="win|mac|linux"]  class "is-detected" on the match, removed from the others.
  *   [data-dl-asset="win-x64|mac-arm64|mac-x64|linux-deb|linux-appimage"]
  *                        href = download URL; class "is-detected" on the one equal to the detected platform.
- *   [data-dl-size="<key>"]  "112 MB".
+ *   [data-dl-size="<key>"]  "122 MB".
+ *   [data-dl-name="<key>"]  the file name, e.g. "Orivon-Setup-0.0.5-x64.exe".
  *   [data-dl-sha="<key>"]   first 8 hex + "…", title = full hex; with attribute data-full the full hex is the text.
  *                           Hidden if the live file has no known digest.
- *   [data-dl-version]       release tag, e.g. "v0.0.1".
+ *   [data-dl-version]       release tag, e.g. "v0.0.5".
  *   [data-dl-date]          "6 Oct 2026" (en-GB).
  *   [data-dl-notes]         href = release page.
  *   [data-dl-source]        href = source tree at the release tag.
- *   [data-dl-ipfs]          text "ipfs://bafybe…sbha", title "ipfs://<cid>"; on an <a> also href "ipfs://<cid>".
+ *   [data-dl-ipfs]          text "ipfs://bafybe…35tu", title "ipfs://<cid>"; on an <a> also href "ipfs://<cid>".
  *                           Hidden (hidden=true) when no CID is known.
  *
  * OUTPUTS
@@ -79,21 +82,21 @@
     'linux-deb': /^orivon_.+_amd64\.deb$/,
     'linux-appimage': /^Orivon-.+-x86_64\.AppImage$/
   };
-  var TAG = 'v0.0.1';
+  var TAG = 'v0.0.5';
   function baked(file, size, sha) {
     return { name: file, url: GH + '/releases/download/' + TAG + '/' + file, size: size, sha: sha };
   }
   var FALLBACK = {
     tag: TAG,
-    published: '2026-10-06T15:41:15Z',
+    published: '2026-10-13T15:27:13Z',
     url: GH + '/releases/tag/' + TAG,
-    cid: 'bafybeicqewqzepj42eqv7vvs6k6eda6i2pcrrutu7mcw5nlqs3lh63sbha',
+    cid: 'bafybeiezuzjpgnpwgfyrrvmnarquh2yzglmfzgw37vsmn6mtuuncrd35tu',
     assets: {
-      'win-x64': baked('Orivon-Setup-0.0.1-x64.exe', 123440079, 'aae74adbfd74f89a59862eb8621d73e5b4b373c81a41242af85d551e1a8667c3'),
-      'mac-arm64': baked('Orivon-0.0.1-arm64.dmg', 146170731, 'da1366157a8b0fc38c393558aac05182078315e73c8e5d14b60fe6df2ff3d1e8'),
-      'mac-x64': baked('Orivon-0.0.1-x64.dmg', 153066316, 'd5536a64284c14c107958adb873666c07631e8ae915aaf6b398aa3c4e49be9bf'),
-      'linux-deb': baked('orivon_0.0.1_amd64.deb', 111566608, '0358401ddb3e179e7f847c9f312b9001b09c91488d6e8c86a60c4c5003e2fac9'),
-      'linux-appimage': baked('Orivon-0.0.1-x86_64.AppImage', 144240695, '7501482adafa5da2d2a07240b8edc90275ee30a0be4d32b442e49ecde92b3efc')
+      'win-x64': baked('Orivon-Setup-0.0.5-x64.exe', 133825901, 'd1bb44edad62ceb9daa1a4fc2b13e10fdb574a592a0ddba8131f22d8f672dc26'),
+      'mac-arm64': baked('Orivon-0.0.5-arm64.dmg', 159543030, '2d113c9c0b9e71e0de481ed652c34c3b20554001ed3172614470042695544b24'),
+      'mac-x64': baked('Orivon-0.0.5-x64.dmg', 166424989, '4a8ff22a7ca2262ca474c5067048963842378fd4725d0429607f9fb2229cf3ce'),
+      'linux-deb': baked('orivon_0.0.5_amd64.deb', 122275016, '31377f96b093d62a373e0d286383ad7b7df9324b111799af73657150b566cb69'),
+      'linux-appimage': baked('Orivon-0.0.5-x86_64.AppImage', 157778896, 'bbc0d26b726d486985ae6c3863ef493ebbcd685eaf324b8d78258a262a95175d')
     }
   };
 
@@ -186,7 +189,6 @@
   function detailText(rel) {
     var os = state.os, p = state.platform, a = rel.assets[p];
     if (os === 'mobile') return 'A desktop browser for Linux, Windows and macOS';
-    if (os === 'win') return 'Free on the Microsoft Store \u00b7 Windows 10 and 11';
     if (os === 'mac') return MAC_CMD_SHORT;
     if (!a) return 'For Linux, Windows and macOS';
     var label = { 'win-x64': 'Windows · .exe', 'mac-arm64': 'macOS · Apple silicon', 'mac-x64': 'macOS · Intel', 'linux-deb': 'Linux · .deb' }[p];
@@ -199,9 +201,9 @@
     setRoot();
     var p = state.platform, os = state.os, a = rel.assets[p];
     try {
-      var mode = os === 'win' ? 'store' : os === 'mac' ? 'copy' : a ? 'file' : 'page';
+      var mode = os === 'mac' ? 'copy' : a ? 'file' : 'page';
       all('[data-dl="auto"]').forEach(function (el) {
-        el.setAttribute('href', mode === 'store' ? STORE_APP : mode === 'file' ? a.url : '#download');
+        el.setAttribute('href', mode === 'file' ? a.url : '#download');
         el.setAttribute('data-dl-platform', p);
         el.setAttribute('data-dl-mode', mode);
         var label = el.querySelector('[data-dl-label]');
@@ -210,7 +212,7 @@
         if (idl) { if (mode === 'copy') idl.setAttribute('hidden', ''); else idl.removeAttribute('hidden'); }
         if (icp) { if (mode !== 'copy') icp.setAttribute('hidden', ''); else icp.removeAttribute('hidden'); }
       });
-      all('[data-dl="hint"]').forEach(function (el) { el.hidden = !(mode === 'copy' && heroHint); });
+      all('[data-dl="hint"]').forEach(function (el) { el.hidden = !(heroHint && (el.getAttribute('data-for') || 'mac') === os); });
       all('[data-dl="detail"]').forEach(function (el) {
         setText(el, detailText(rel));
         el.classList.toggle('is-cmd', os === 'mac');
@@ -220,7 +222,7 @@
       var altText = { 'linux-appimage': 'AppImage for any distro', 'mac-x64': 'Prefer a .dmg?', 'mac-arm64': 'Prefer a .dmg?' }[altKey];
       all('[data-dl="alt"]').forEach(function (el) {
         if (os === 'win') {
-          setText(el, 'winget or installer');
+          setText(el, 'winget or Microsoft Store');
           el.setAttribute('href', '#download');
           el.removeAttribute('hidden');
           el.hidden = false;
@@ -247,6 +249,10 @@
       all('[data-dl-size]').forEach(function (el) {
         var x = rel.assets[el.getAttribute('data-dl-size')];
         if (x) setText(el, mb(x.size));
+      });
+      all('[data-dl-name]').forEach(function (el) {
+        var x = rel.assets[el.getAttribute('data-dl-name')];
+        if (x) setText(el, x.name);
       });
       all('[data-dl-sha]').forEach(function (el) {
         var x = rel.assets[el.getAttribute('data-dl-sha')];
@@ -333,6 +339,11 @@
       }, 2000);
     });
   }
+  function onHeroDownload() {
+    heroHint = true;
+    announce('Downloading the installer. Open it when it has finished. If Windows protected your PC appears, choose More info, then Run anyway.');
+    apply(state.release, state.source);
+  }
   function onHeroCopy(el) {
     copyText(MAC_CMD).then(function (ok) {
       if (!ok) { try { location.hash = '#download'; } catch (e) {} return; }
@@ -348,8 +359,13 @@
       var t = e.target && e.target.closest ? e.target : null;
       if (!t) return;
       var hero = t.closest('[data-dl="auto"]');
-      if (hero && state.os === 'mac') {
+      if (hero && (state.os === 'mac' || state.os === 'win')) {
         if (e.defaultPrevented || e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        if (state.os === 'win') {
+          // The link itself starts the download; only the SmartScreen hint is added.
+          if (hero.getAttribute('data-dl-mode') === 'file') onHeroDownload();
+          return;
+        }
         e.preventDefault();
         onHeroCopy(hero);
         return;

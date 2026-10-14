@@ -103,7 +103,8 @@
         <svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M4 5.5h16v13H4zM8 10l3 2.5L8 15M13 15h3.5"/></svg>
         <span data-dl-label>Download Orivon</span>
       </a>
-      <p class="cta-hint" data-dl="hint" hidden>Open Terminal (&#8984; Space, type Terminal), paste with &#8984; V and press Return. Orivon installs and opens itself.</p>
+      <p class="cta-hint" data-dl="hint" data-for="win" hidden>When the download finishes, open the file. If Windows says &ldquo;Windows protected your PC&rdquo;, click <strong>More info</strong>, then <strong>Run anyway</strong>. <a href="#install-win">See the steps</a></p>
+      <p class="cta-hint" data-dl="hint" data-for="mac" hidden>Open Terminal (&#8984; Space, type Terminal), paste with &#8984; V and press Return. Orivon installs and opens itself.</p>
       <div class="cta-meta">
         <span class="pill">Early access</span>
         <span data-dl="detail">For Linux, Windows and macOS</span>
@@ -370,10 +371,10 @@
     <div class="sec-head center" style="margin-bottom:0">
       <h2 id="dl-title">Download Orivon</h2>
       <div class="dl-meta">
-        <span>Version <strong data-dl-version>v0.0.1</strong></span>
+        <span>Version <strong data-dl-version>v0.0.5</strong></span>
         <span class="pill">Early access</span>
-        <span class="dl-links"><a data-dl-notes href="https://github.com/OrivonBrowser/orivon-mvp/releases/tag/v0.0.1" rel="noopener">What's new</a>
-        <a data-dl-source href="https://github.com/OrivonBrowser/orivon-mvp/tree/v0.0.1" rel="noopener">Source code</a></span>
+        <span class="dl-links"><a data-dl-notes href="https://github.com/OrivonBrowser/orivon-mvp/releases/tag/v0.0.5" rel="noopener">What's new</a>
+        <a data-dl-source href="https://github.com/OrivonBrowser/orivon-mvp/tree/v0.0.5" rel="noopener">Source code</a></span>
       </div>
     </div>
 
@@ -401,20 +402,56 @@
           <h3 id="h-win">Windows</h3><span class="chip">Detected</span>
         </div>
         <p class="req">Windows 10 (version 1809) or newer &middot; x64</p>
-        <div class="dl-cols">
-          <div class="dl-rec">
-            <p class="dl-tag">Recommended</p>
-            <h4>Microsoft Store</h4>
-            <p class="dl-line">Signed by Microsoft, installs in one click, updates itself.</p>
-            <a class="btn store-btn" data-dl-store href="https://apps.microsoft.com/search?query=Orivon%20Browser" rel="noopener">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8.5h14l-1.1 11H6.1zM9 8.5V7a3 3 0 0 1 6 0v1.5"/><path d="M9.3 11.6h2.2v2.2H9.3zM12.6 11.6h2.2v2.2h-2.2zM9.3 14.9h2.2v2.2H9.3zM12.6 14.9h2.2v2.2h-2.2z" fill="currentColor" stroke-width="0"/></svg>
-              <span>Get it from Microsoft Store</span>
-            </a>
-            <p class="dl-fine">In the Store, press Get, then Open.</p>
+        <div class="dl-rec win-rec">
+          <div class="win-top">
+            <div class="win-intro">
+              <p class="dl-tag">Recommended</p>
+              <h4>Installer (.exe)</h4>
+              <p class="dl-line">Download it and open it. Orivon installs for your account, with no administrator needed.</p>
+            </div>
+            <a class="pkg" data-dl-asset="win-x64" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.5/Orivon-Setup-0.0.5-x64.exe"><span>Installer .exe<small>Windows, x64</small></span><span class="sz"><span data-dl-size="win-x64">134 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
           </div>
+          <div class="ss" id="install-win">
+            <div class="ss-copy">
+              <h5>Windows asks once</h5>
+              <p class="ss-text">The installer isn&rsquo;t signed yet, so the first time you open it, Windows SmartScreen says &ldquo;Windows protected your PC&rdquo;. Click <strong>More info</strong>, then <strong>Run anyway</strong>, and the installer starts.</p>
+            </div>
+            <ol class="ss-frames" aria-label="Installing on Windows">
+              <li class="ss-step">
+                <div class="ss-dl" aria-hidden="true">
+                  <div class="ss-dl-title">Downloads</div>
+                  <div class="ss-dl-file">
+                    <img src="assets/img/icon-48.png" width="28" height="28" alt="">
+                    <span><b data-dl-name="win-x64">Orivon-Setup-0.0.5-x64.exe</b><small data-dl-size="win-x64">134 MB</small></span>
+                  </div>
+                  <div class="ss-more"><u>Open file</u><i class="ss-mk">1</i></div>
+                </div>
+                <p class="ss-cap"><i aria-hidden="true">1</i> Open the downloaded file</p>
+              </li>
+              <li class="ss-step">
+                <div class="ss-win" aria-hidden="true">
+                  <div class="ss-title">Windows protected your PC</div>
+                  <div class="ss-body">Microsoft Defender SmartScreen prevented an unrecognised app from starting.</div>
+                  <div class="ss-more"><u>More info</u><i class="ss-mk">2</i></div>
+                  <div class="ss-btns"><b class="ss-btn">Don&rsquo;t run</b></div>
+                </div>
+                <p class="ss-cap"><i aria-hidden="true">2</i> Click More info</p>
+              </li>
+              <li class="ss-step">
+                <div class="ss-win" aria-hidden="true">
+                  <div class="ss-title">Windows protected your PC</div>
+                  <div class="ss-body ss-kv"><span>App: <span data-dl-name="win-x64">Orivon-Setup-0.0.5-x64.exe</span></span><span>Publisher: Unknown publisher</span></div>
+                  <div class="ss-btns"><b class="ss-btn run">Run anyway<i class="ss-mk">3</i></b><b class="ss-btn">Don&rsquo;t run</b></div>
+                </div>
+                <p class="ss-cap"><i aria-hidden="true">3</i> Click Run anyway</p>
+              </li>
+            </ol>
+          </div>
+        </div>
 
-          <div class="dl-other">
-            <p class="dl-tag plain">Other ways</p>
+        <div class="dl-other win-other">
+          <p class="dl-tag plain">Other ways</p>
+          <div class="ways">
             <div class="way">
               <h4>winget</h4>
               <div class="cmd">
@@ -424,34 +461,16 @@
               <p class="dl-fine">Run it in Terminal or PowerShell.</p>
             </div>
             <div class="way">
-              <h4>Installer (.exe)</h4>
-              <a class="pkg" data-dl-asset="win-x64" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.1/Orivon-Setup-0.0.1-x64.exe"><span>Installer .exe<small>x64</small></span><span class="sz"><span data-dl-size="win-x64">123 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
-              <p class="dl-fine">Per-user install, no administrator needed.</p>
+              <h4>Microsoft Store</h4>
+              <p class="dl-fine">Signed by Microsoft, installs in one click, updates itself.</p>
+              <a class="btn store-btn" data-dl-store href="https://apps.microsoft.com/search?query=Orivon%20Browser" rel="noopener">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8.5h14l-1.1 11H6.1zM9 8.5V7a3 3 0 0 1 6 0v1.5"/><path d="M9.3 11.6h2.2v2.2H9.3zM12.6 11.6h2.2v2.2h-2.2zM9.3 14.9h2.2v2.2H9.3zM12.6 14.9h2.2v2.2h-2.2z" fill="currentColor" stroke-width="0"/></svg>
+                <span>Get it from Microsoft Store</span>
+              </a>
+              <p class="dl-fine">In the Store, press Get, then Open.</p>
             </div>
           </div>
         </div>
-        <div class="ss">
-        <div class="ss-copy"><h4>Using the installer?</h4><p class="ss-text">The installer isn&rsquo;t signed yet, so Windows may show &ldquo;Windows protected your PC&rdquo;. Click <strong>More info</strong>, then <strong>Run anyway</strong>.</p></div>
-        <div class="ss-frames" role="img" aria-label="Two steps on the Windows SmartScreen window. Step 1: click the More info link. Step 2: click the Run anyway button.">
-          <div class="ss-step" aria-hidden="true">
-            <div class="ss-win">
-              <div class="ss-title">Windows protected your PC</div>
-              <div class="ss-body">Microsoft Defender SmartScreen prevented an unrecognised app from starting.</div>
-              <div class="ss-more"><u>More info</u><i class="ss-mk">1</i></div>
-              <div class="ss-btns"><b class="ss-btn">Don&rsquo;t run</b></div>
-            </div>
-            <p class="ss-cap"><i>1</i> Click More info</p>
-          </div>
-          <div class="ss-step" aria-hidden="true">
-            <div class="ss-win">
-              <div class="ss-title">Windows protected your PC</div>
-              <div class="ss-body ss-kv"><span>App: Orivon-Setup-&hellip;-x64.exe</span><span>Publisher: Unknown publisher</span></div>
-              <div class="ss-btns"><b class="ss-btn run">Run anyway<i class="ss-mk">2</i></b><b class="ss-btn">Don&rsquo;t run</b></div>
-            </div>
-            <p class="ss-cap"><i>2</i> Click Run anyway</p>
-          </div>
-        </div>
-              </div>
       </article>
 
       <!-- MACOS -->
@@ -481,8 +500,8 @@
             <p class="dl-tag plain">Other ways</p>
             <div class="way">
               <h4>Disk image (.dmg)</h4>
-              <a class="pkg" data-dl-asset="mac-arm64" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.1/Orivon-0.0.1-arm64.dmg"><span>.dmg<small>Apple silicon</small></span><span class="sz"><span data-dl-size="mac-arm64">146 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
-              <a class="pkg" data-dl-asset="mac-x64" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.1/Orivon-0.0.1-x64.dmg"><span>.dmg<small>Intel</small></span><span class="sz"><span data-dl-size="mac-x64">153 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+              <a class="pkg" data-dl-asset="mac-arm64" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.5/Orivon-0.0.5-arm64.dmg"><span>.dmg<small>Apple silicon</small></span><span class="sz"><span data-dl-size="mac-arm64">160 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+              <a class="pkg" data-dl-asset="mac-x64" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.5/Orivon-0.0.5-x64.dmg"><span>.dmg<small>Intel</small></span><span class="sz"><span data-dl-size="mac-x64">166 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
               <p class="dl-fine">First open: System Settings &rarr; Privacy &amp; Security &rarr; Open Anyway.</p>
             </div>
           </div>
@@ -501,13 +520,13 @@
             <p class="dl-tag">Recommended</p>
             <h4>Debian package</h4>
             <p class="dl-line">For Debian, Ubuntu and their relatives. Open it with your software installer.</p>
-            <a class="pkg" data-dl-asset="linux-deb" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.1/orivon_0.0.1_amd64.deb"><span>.deb<small>Debian, Ubuntu</small></span><span class="sz"><span data-dl-size="linux-deb">112 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+            <a class="pkg" data-dl-asset="linux-deb" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.5/orivon_0.0.5_amd64.deb"><span>.deb<small>Debian, Ubuntu</small></span><span class="sz"><span data-dl-size="linux-deb">122 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
           </div>
           <div class="dl-other">
             <p class="dl-tag plain">Other ways</p>
             <div class="way">
               <h4>AppImage</h4>
-              <a class="pkg" data-dl-asset="linux-appimage" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.1/Orivon-0.0.1-x86_64.AppImage"><span>AppImage<small>Any distro</small></span><span class="sz"><span data-dl-size="linux-appimage">144 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+              <a class="pkg" data-dl-asset="linux-appimage" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.5/Orivon-0.0.5-x86_64.AppImage"><span>AppImage<small>Any distro</small></span><span class="sz"><span data-dl-size="linux-appimage">158 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
               <p class="dl-fine">The AppImage may need libfuse2.</p>
             </div>
           </div>
@@ -520,12 +539,12 @@
     <details class="nerd">
       <summary>Checksums and IPFS CID</summary>
       <dl>
-        <dt>.deb</dt><dd data-dl-sha="linux-deb" data-full>0358401ddb3e179e7f847c9f312b9001b09c91488d6e8c86a60c4c5003e2fac9</dd>
-        <dt>AppImage</dt><dd data-dl-sha="linux-appimage" data-full>7501482adafa5da2d2a07240b8edc90275ee30a0be4d32b442e49ecde92b3efc</dd>
-        <dt>Windows</dt><dd data-dl-sha="win-x64" data-full>aae74adbfd74f89a59862eb8621d73e5b4b373c81a41242af85d551e1a8667c3</dd>
-        <dt>macOS arm64</dt><dd data-dl-sha="mac-arm64" data-full>da1366157a8b0fc38c393558aac05182078315e73c8e5d14b60fe6df2ff3d1e8</dd>
-        <dt>macOS x64</dt><dd data-dl-sha="mac-x64" data-full>d5536a64284c14c107958adb873666c07631e8ae915aaf6b398aa3c4e49be9bf</dd>
-        <dt>IPFS CID</dt><dd><span data-dl-ipfs>ipfs://bafybe…sbha</span></dd>
+        <dt>.deb</dt><dd data-dl-sha="linux-deb" data-full>31377f96b093d62a373e0d286383ad7b7df9324b111799af73657150b566cb69</dd>
+        <dt>AppImage</dt><dd data-dl-sha="linux-appimage" data-full>bbc0d26b726d486985ae6c3863ef493ebbcd685eaf324b8d78258a262a95175d</dd>
+        <dt>Windows</dt><dd data-dl-sha="win-x64" data-full>d1bb44edad62ceb9daa1a4fc2b13e10fdb574a592a0ddba8131f22d8f672dc26</dd>
+        <dt>macOS arm64</dt><dd data-dl-sha="mac-arm64" data-full>2d113c9c0b9e71e0de481ed652c34c3b20554001ed3172614470042695544b24</dd>
+        <dt>macOS x64</dt><dd data-dl-sha="mac-x64" data-full>4a8ff22a7ca2262ca474c5067048963842378fd4725d0429607f9fb2229cf3ce</dd>
+        <dt>IPFS CID</dt><dd><span data-dl-ipfs>ipfs://bafybe…35tu</span></dd>
       </dl>
     </details>
   </div>

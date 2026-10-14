@@ -75,6 +75,14 @@
     var start = document.getElementById('tab-' + (os === 'mac' || os === 'linux' ? os : 'win')) || tabs[0];
     select(start, false);
     tabs.forEach(function (t) { t.addEventListener('click', function () { select(t, false); }); });
+    // A link into a hidden panel (the hero's "See the steps") selects that panel's tab first.
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href^="#"]');
+      var el = a && document.getElementById(a.getAttribute('href').slice(1));
+      var panel = el && el.closest('[role="tabpanel"]');
+      var tab = panel && panel.hidden && document.getElementById(panel.getAttribute('aria-labelledby'));
+      if (tab) select(tab, false);
+    });
     list.addEventListener('keydown', function (e) {
       var i = tabs.indexOf(document.activeElement);
       if (i < 0) return;
