@@ -21,7 +21,18 @@ npm run build:web3   # also build-web3/   the Web3 site
 
 Source files keep the Web2 addresses. Never hand-edit `.eth.limo` variants of Orivon's own sites into `site/`.
 
-A push to `main` runs `.github/workflows/pages.yml`: it builds both, deploys `build/` to GitHub Pages and keeps `build-web3/` as the `web3-build` artifact.
+## Release links
+
+The download links, version label, file sizes, checksums and IPFS CID in `site/index.html`, and the fallback release at the top of `site/assets/js/orivon-download.js` (between `release:begin` and `release:end`), are generated from the latest release of `OrivonBrowser/orivon-mvp`: the newest published release with a `vMAJOR.MINOR.PATCH` tag and every installer (pre-releases count, drafts and other tags do not). Checksums come from each asset's `digest`, else from the release's `ipfs.json`.
+
+```
+npm run sync-release    # rewrite site/ from the latest release, then commit the result
+npm run check-release   # change nothing; exit 1 if site/ lags the latest release
+```
+
+`.github/workflows/release-links.yml` runs the check on pull requests, on pushes to `main` and every day, so a new release turns it red until `sync-release` is committed and the Web3 build is published again. Never edit these values by hand.
+
+A push to `main` runs `.github/workflows/pages.yml`: it runs `sync-release` (a failure there is ignored), builds both, deploys `build/` to GitHub Pages and keeps `build-web3/` as the `web3-build` artifact.
 
 ## Constraints
 

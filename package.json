@@ -5,6 +5,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:web3": "node scripts/build.mjs --web3",
+    "sync-release": "node scripts/sync-release.mjs",
+    "check-release": "node scripts/sync-release.mjs --check",
     "serve": "python3 -m http.server 4320 -d site"
   }
 }

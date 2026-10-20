@@ -20,6 +20,14 @@ jobs:
         with:
           node-version: 22
 
+      # Ships the newest release even when the committed links lag it. A failure here (API down)
+      # must not block a site fix, so the committed links are used instead.
+      - name: Point the links at the latest release
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run sync-release
+
       - name: Build the Web2 and Web3 sites
         run: npm run build:web3
 
