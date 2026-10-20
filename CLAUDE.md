@@ -19,6 +19,10 @@ The release website of Orivon (www.orivonstack.com). Plain static site in `site/
 
 `build/` is the Web2 site (www.orivonstack.com, GitHub Pages). `build-web3/` is the same files with every Orivon address pointed at its `.eth.limo` twin (www.orivonstack.com and orivonstack.com to www.orivonstack.eth.limo, docs.orivonstack.com to docs.orivonstack.eth.limo), via `scripts/web3-links.mjs`, which is shared byte for byte by every Orivon repository that builds a static site: do not edit it here. The Web3 build is published on IPFS behind the IPNS name that www.orivonstack.eth and download.orivonstack.eth point to. Source files keep Web2 addresses; never hand-edit `.eth.limo` variants of Orivon's own sites into `site/`.
 
+## Release links
+
+Never hand-edit the version, package hrefs, sizes, checksums or CID: `npm run sync-release` generates them from the latest release (`scripts/sync-release.mjs`), `npm run check-release` verifies, and `.github/workflows/release-links.yml` runs it daily. After a release, run sync, commit, rebuild `build-web3/` and have it published.
+
 ## Download wiring
 
 - `site/assets/js/orivon-download.js` does OS detection, the hero button, package links, sizes and the live release. Its header comment documents every `data-*` attribute.
