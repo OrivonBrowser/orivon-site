@@ -1,7 +1,8 @@
 name: Release links
 
 # Fails when the download links, version label, checksums and IPFS CID committed in site/ lag the
-# latest release. Fix: run `npm run sync-release` and commit the result.
+# latest release (fix: run `npm run sync-release` and commit the result), or when the apps the page
+# can name with ?app= differ from the browser's allowlist (fix: update site/assets/js/orivon-flavours.js).
 on:
   pull_request:
   push:
@@ -27,3 +28,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run check-release
+      - name: Compare the ?app= allowlist with the browser's
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run check-flavours
+      - name: Unit tests
+        run: npm test

@@ -7,6 +7,9 @@
     "build:web3": "node scripts/build.mjs --web3",
     "sync-release": "node scripts/sync-release.mjs",
     "check-release": "node scripts/sync-release.mjs --check",
-    "serve": "python3 -m http.server 4320 -d site"
+    "serve": "python3 -m http.server 4320 -d site",
+    "check-flavours": "node scripts/check-flavours.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check-page": "node test/page-check.mjs"
   }
 }
