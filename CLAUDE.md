@@ -30,7 +30,12 @@ Never hand-edit the version, package hrefs, sizes, checksums or CID: `npm run sy
 - Hero per OS: Windows opens the Store app link; macOS copies the install command; Linux downloads the .deb; mobile and unknown go to `#download`.
 - `#download` is an OS-tabbed panel (tabs built by `site/assets/js/site.js`; without JS all three panels stack). Copy buttons use `data-copy` or `data-copy-from=<id>`.
 - The commands also stay literally in the HTML so they read with JS off.
+- `?app=<id>` (`site/assets/js/orivon-flavours.js` holds the allowlist and the pure functions; `orivon-download.js` binds them): only the six allowlisted ids count, anything else leaves the page as if there were no parameter, and only the allowlisted name is shown, via `textContent`. Never echo the query string. The list mirrors orivon-mvp `resources/flavours.json`; `npm run check-flavours` (in the release-links workflow) keeps it honest. The tagged `.exe` and `.AppImage` are offered only when the latest release has them (`sync-release` records them in the fallback). `OPEN_IN_ORIVON` in `orivon-download.js` stays `false` until a released Orivon handles `orivon:` links.
 - `site.js` also jumps to `#download` when the page is opened on a `download.` host.
+
+## Tests
+
+`npm test` (Node's built-in runner, no dependencies) covers the `?app=` functions and `sync-release`'s tagged records. `npm run check-page` drives the page in headless Chromium (Playwright from `PLAYWRIGHT_DIR`, default `../orivon-mvp`; skipped when missing), with a fake release answering api.github.com.
 
 ## QA
 

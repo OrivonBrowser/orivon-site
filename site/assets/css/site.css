@@ -724,6 +724,15 @@ html:not(.js-tabs) .dl-panel.is-detected { box-shadow: 0 0 0 2.5px var(--detecte
 .copy.is-copied { background: var(--grass); color: #15241a; }
 .cmd .copy:focus-visible { outline-color: var(--yellow); }
 
+/* The ?app= block: the app's name, and the package that opens it */
+.app-head { margin: 32px auto 0; max-width: 720px; padding: clamp(18px, 2.6vw, 28px); border-radius: 20px; background: var(--card); box-shadow: 0 0 0 1px var(--line), var(--shadow-card); display: grid; gap: 12px; }
+.app-head h3 { font-size: clamp(22px, 2.6vw, 28px); }
+.app-head[hidden], .app-offer[hidden], .app-open[hidden], .app-offer [hidden] { display: none; }
+.app-open { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.app-open .dl-fine { flex-basis: 100%; }
+.app-offer { display: grid; gap: 10px; margin-top: 18px; padding: 16px; border-radius: 16px; box-shadow: 0 0 0 1.5px var(--line); }
+.app-offer code { font: 500 12.5px/1.5 var(--mono); overflow-wrap: anywhere; }
+
 /* macOS steps and keycaps */
 .steps { list-style: none; padding: 0; margin: 2px 0 0; display: grid; gap: 12px; }
 .steps li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; align-items: start; font-size: 16px; line-height: 1.55; }

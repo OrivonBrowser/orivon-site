@@ -378,6 +378,16 @@
       </div>
     </div>
 
+    <div class="app-head" data-app-head hidden>
+      <h3>Get <span data-app-name></span> in Orivon</h3>
+      <p class="dl-line" data-app-community></p>
+      <div class="app-open" data-app-open-row hidden>
+        <a class="btn" data-app-open href="#download"><span data-app-open-label>Open in Orivon</span></a>
+        <button class="copy" type="button" data-app-copy-address><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6v3H9zM7 5.5H5.5v14h13v-14H17"/></svg><span>Copy address</span></button>
+        <p class="dl-fine">Already have Orivon? The button opens the app in it. If nothing happens, copy the address and paste it into Orivon.</p>
+      </div>
+    </div>
+
     <div class="dl-tabs" role="tablist" aria-label="Choose your system" hidden>
       <button class="dl-tab" type="button" role="tab" id="tab-win" data-tab="win" aria-selected="false" aria-controls="panel-win" tabindex="-1">
         <svg class="cube" viewBox="0 0 48 48" aria-hidden="true"><path fill="#cfe6f7" d="M24 3l19 10.5L24 24 5 13.5z"/><path fill="#1fb4ff" d="M5 13.5L24 24v21L5 34.5z"/><path fill="#458aff" d="M43 13.5V34.5L24 45V24z"/></svg>
@@ -402,6 +412,11 @@
           <h3 id="h-win">Windows</h3><span class="chip">Detected</span>
         </div>
         <p class="req">Windows 10 (version 1809) or newer &middot; x64</p>
+        <div class="app-offer" data-app-offer="win" hidden>
+          <p class="dl-line" data-app-opens></p>
+          <a class="pkg" data-app-pkg href="#download"><span>Installer .exe<small>Windows, x64</small></span><span class="sz"><span data-app-size></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+          <p class="dl-fine" data-app-sha-row>SHA-256 <code data-app-sha></code></p>
+        </div>
         <div class="dl-rec win-rec">
           <div class="win-top">
             <div class="win-intro">
@@ -480,6 +495,9 @@
           <h3 id="h-mac">macOS</h3><span class="chip">Detected</span>
         </div>
         <p class="req">macOS 13 Ventura or newer &middot; Apple silicon or Intel</p>
+        <div class="app-offer" data-app-offer="mac" hidden>
+          <p class="dl-line" data-app-opens></p>
+        </div>
         <div class="dl-cols mac">
           <div class="dl-rec">
             <p class="dl-tag">Recommended</p>
@@ -515,6 +533,12 @@
           <h3 id="h-linux">Linux</h3><span class="chip">Detected</span>
         </div>
         <p class="req">x64 &middot; Debian and Ubuntu, or any distro</p>
+        <div class="app-offer" data-app-offer="linux" hidden>
+          <p class="dl-line" data-app-opens></p>
+          <a class="pkg" data-app-pkg href="#download"><span>AppImage<small>Any distro</small></span><span class="sz"><span data-app-size></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+          <p class="dl-fine" data-app-sha-row>SHA-256 <code data-app-sha></code></p>
+          <p class="dl-fine">The AppImage may need libfuse2.</p>
+        </div>
         <div class="dl-cols">
           <div class="dl-rec">
             <p class="dl-tag">Recommended</p>
@@ -571,6 +595,7 @@
   </div></div>
 </footer>
 
+<script src="assets/js/orivon-flavours.js" defer></script>
 <script src="assets/js/orivon-download.js" defer></script>
 <script src="assets/js/site.js" defer></script>
 </body>

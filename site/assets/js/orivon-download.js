@@ -52,10 +52,24 @@
  *   [data-dl-ipfs]          text "ipfs://bafybe…35tu", title "ipfs://<cid>"; on an <a> also href "ipfs://<cid>".
  *                           Hidden (hidden=true) when no CID is known.
  *
+ * APP LINK  (?app=<id>, needs orivon-flavours.js; without it, or for any value not on its allowlist, nothing below happens)
+ *   An allowlisted id (see orivon-flavours.js) makes the page offer that app. Only the allowlisted name is shown,
+ *   always through textContent; the raw query string is never written into the page or sent anywhere.
+ *   [data-app-head]       block above the tabs, shown for a valid id.
+ *   [data-app-name]       the app's name.   [data-app-community]  "A community build by Orivon, not the official <name>."
+ *   [data-app-open-row]   "Open in Orivon" row, shown only when OPEN_IN_ORIVON is true:
+ *     [data-app-open]       href = orivon:open?u=<address>&flavour=<id>;  [data-app-copy-address]  copies ipfs://<address>.
+ *   [data-app-offer="win|mac|linux"]  block at the top of that OS panel. win and linux are shown only when the latest
+ *                         release has the tagged package (Orivon-Setup-<ver>-x64.<id>.exe, Orivon-<ver>-x86_64.<id>.AppImage):
+ *     [data-app-pkg]        href = the tagged package;  [data-app-size], [data-app-sha] (full hex, hidden without a digest)
+ *     [data-app-opens]      "After installing, Orivon opens <name>."
+ *   macOS always gets the id in the install command (#cmd-mac, the hero copy and its detail line).
+ *   The hero offers the tagged .exe on Windows and the tagged AppImage on Linux when the release has them.
+ *
  * OUTPUTS
  *   <html data-os="win|mac|linux|mobile|unknown" data-arch="arm64|x64|" data-platform="<asset key>|">
  *     (data-os / data-platform are set synchronously at load; Apple silicon vs Intel refined shortly after.)
- *   window.OrivonDownload = { os, platform, release, ready: Promise }  (ready resolves after the live apply
+ *   window.OrivonDownload = { os, platform, release, ready: Promise, app: the ?app= entry or null, buildRelease(list) }  (ready resolves after the live apply
  *     or after the live fetch failed and the fallback stays).
  *   document event "orivon:download-ready", detail {source: "fallback" | "api"}, fired after every apply.
  *   Never throws or logs to the console: API down, storage blocked, clipboard denied, missing elements are all fine.
@@ -67,6 +81,12 @@
   var WINGET_ID = 'Orivon.Browser.Preview';
   var MAC_CMD = 'curl -fsSL https://raw.githubusercontent.com/OrivonBrowser/orivon-mvp/main/scripts/install-macos.sh | bash';
   var MAC_CMD_SHORT = 'curl -fsSL \u2026/install-macos.sh | bash';
+  // The "Open in Orivon" link needs a released Orivon that handles orivon: links. Keep false until one is out.
+  var OPEN_IN_ORIVON = false;
+  var F = window.OrivonFlavours || null;
+  var APP = null;
+  try { APP = F ? F.parseApp(location.search) : null; } catch (e) { APP = null; }
+  if (APP) { MAC_CMD = F.macCommand(MAC_CMD, APP); MAC_CMD_SHORT = F.macCommand(MAC_CMD_SHORT, APP); }
   var STORE_APP = 'ms-windows-store://pdp/?' + (STORE.productId ? 'ProductId=' + STORE.productId : 'PFN=' + STORE.pfn);
   var STORE_WEB = STORE.productId ? 'https://apps.microsoft.com/detail/' + STORE.productId
     : 'https://apps.microsoft.com/search?query=' + encodeURIComponent(STORE.name);
@@ -98,7 +118,8 @@
       'mac-x64': baked('Orivon-0.0.8-x64.dmg', 170324820, '98ff5a0265cb11291a962b0d23252b9d9e55b2113b055b8ca14348672a8cba62'),
       'linux-deb': baked('orivon_0.0.8_amd64.deb', 125166248, '985b53fd5dfb2d45884e26bdde0ace27cc32adfe34b316cf7b7097ad873a3a96'),
       'linux-appimage': baked('Orivon-0.0.8-x86_64.AppImage', 161767956, 'f555b52a5a284843655b9c94f2137ac6a0b66248f433ef7e2e0ab8d8e7b3be28')
-    }
+    },
+    tagged: {}
   };
   // release:end
 
@@ -119,7 +140,7 @@
   }
   var det = detect();
   var state = { os: det.os, platform: det.platform, release: FALLBACK, source: 'fallback' };
-  var api = window.OrivonDownload = { os: det.os, platform: det.platform, release: FALLBACK, ready: null };
+  var api = window.OrivonDownload = { os: det.os, platform: det.platform, release: FALLBACK, ready: null, app: APP, buildRelease: null };
 
   function archOf(p) {
     return p === 'mac-arm64' ? 'arm64' : (p === 'win-x64' || p === 'mac-x64' || p === 'linux-deb') ? 'x64' : '';
@@ -164,6 +185,19 @@
       if (m) sha = m[1].toLowerCase(); else if (found.name === b.name) sha = b.sha;
       assets[key] = { name: found.name, url: found.browser_download_url, size: +found.size || 0, sha: sha };
     });
+    var tagged = {};
+    if (F) best.assets.forEach(function (a) {
+      if (!a || !a.name || !a.browser_download_url) return;
+      ['win-x64', 'linux-appimage'].forEach(function (key) {
+        var id = F.taggedId(key, a.name);
+        if (!id) return;
+        var sha = '', m = /^sha256:([0-9a-f]{64})$/i.exec(a.digest || '');
+        var plain = assets[key];
+        if (m) sha = m[1].toLowerCase();
+        else if (plain && plain.sha && plain.size === +a.size) sha = plain.sha;  // same bytes as the plain file
+        (tagged[id] = tagged[id] || {})[key] = { name: a.name, url: a.browser_download_url, size: +a.size || 0, sha: sha };
+      });
+    });
     var cm = /ipfs:\/\/(baf[a-z2-7]+)/.exec(best.body || '');
     var cid = cm ? cm[1] : (best.tag_name === FALLBACK.tag ? FALLBACK.cid : '');
     return {
@@ -171,12 +205,15 @@
       published: best.published_at || best.created_at || FALLBACK.published,
       url: best.html_url || (GH + '/releases/tag/' + best.tag_name),
       cid: cid,
-      assets: assets
+      assets: assets,
+      tagged: tagged
     };
   }
 
+  api.buildRelease = buildRelease;
+
   // ---- DOM binding -----------------------------------------------------------------------------
-  function all(sel) { try { return Array.prototype.slice.call(doc.querySelectorAll(sel)); } catch (e) { return []; } }
+  function all(sel, from) { try { return Array.prototype.slice.call((from || doc).querySelectorAll(sel)); } catch (e) { return []; } }
   function setText(el, t) { el.textContent = t; }
   function mb(bytes) { return bytes ? Math.round(bytes / 1e6) + ' MB' : ''; }
   var DATE_FMT = null;
@@ -188,24 +225,73 @@
       return DATE_FMT.format(d).replace('Sept', 'Sep');
     } catch (e) { return ''; }
   }
+  // The package the hero offers: the tagged one for the chosen app when the release has it.
+  function heroPick(rel) {
+    var p = state.platform, key = p === 'linux-deb' ? 'linux-appimage' : p;
+    if (APP && (key === 'win-x64' || key === 'linux-appimage')) {
+      var t = F.pickAsset(rel, key, APP.id);
+      if (t && t.tagged) return { asset: t.asset, tagged: true, key: key };
+    }
+    return rel.assets[p] ? { asset: rel.assets[p], tagged: false, key: p } : null;
+  }
   function detailText(rel) {
-    var os = state.os, p = state.platform, a = rel.assets[p];
+    var os = state.os, hp = heroPick(rel);
     if (os === 'mobile') return 'A desktop browser for Linux, Windows and macOS';
     if (os === 'mac') return MAC_CMD_SHORT;
-    if (!a) return 'For Linux, Windows and macOS';
-    var label = { 'win-x64': 'Windows · .exe', 'mac-arm64': 'macOS · Apple silicon', 'mac-x64': 'macOS · Intel', 'linux-deb': 'Linux · .deb' }[p];
-    return rel.tag + ' · ' + label + ' · ' + mb(a.size);
+    if (!hp) return 'For Linux, Windows and macOS';
+    var label = { 'win-x64': 'Windows · .exe', 'mac-arm64': 'macOS · Apple silicon', 'mac-x64': 'macOS · Intel', 'linux-deb': 'Linux · .deb', 'linux-appimage': 'Linux · AppImage' }[hp.key];
+    return rel.tag + ' · ' + label + ' · ' + mb(hp.asset.size) + (hp.tagged ? ' · opens ' + APP.name : '');
+  }
+
+  // ---- the ?app= block -------------------------------------------------------------------------
+  function showHead() {
+    var head = all('[data-app-head]')[0];
+    if (!head) return;
+    all('[data-app-name]').forEach(function (el) { setText(el, APP.name); });
+    all('[data-app-community]').forEach(function (el) { setText(el, 'A community build by Orivon, not the official ' + APP.name + '.'); });
+    all('[data-app-open-row]').forEach(function (el) { el.hidden = !OPEN_IN_ORIVON; });
+    if (OPEN_IN_ORIVON) {
+      all('[data-app-open]').forEach(function (el) {
+        el.setAttribute('href', F.openLink(APP));
+        var l = el.querySelector('[data-app-open-label]');
+        if (l) setText(l, 'Open ' + APP.name + ' in Orivon');
+      });
+      all('[data-app-copy-address]').forEach(function (el) { el.setAttribute('data-copy', F.ipfsAddress(APP)); });
+    }
+    head.hidden = false;
+    head.removeAttribute('hidden');
+  }
+  function applyOffers(rel) {
+    var opens = 'After installing, Orivon opens ' + APP.name + '.';
+    all('[data-app-offer]').forEach(function (box) {
+      var os = box.getAttribute('data-app-offer'), t = null;
+      if (os === 'mac') t = { asset: null };
+      else t = F.pickAsset(rel, os === 'win' ? 'win-x64' : 'linux-appimage', APP.id);
+      if (!t || (os !== 'mac' && !t.tagged)) { box.hidden = true; return; }
+      all('[data-app-opens]', box).forEach(function (el) { setText(el, opens); });
+      var a = t.asset;
+      if (a) {
+        all('[data-app-pkg]', box).forEach(function (el) { el.setAttribute('href', a.url); });
+        all('[data-app-size]', box).forEach(function (el) { setText(el, mb(a.size)); });
+        all('[data-app-sha-row]', box).forEach(function (row) {
+          row.hidden = !a.sha;
+          all('[data-app-sha]', row).forEach(function (el) { setText(el, a.sha); });
+        });
+      }
+      box.hidden = false;
+      box.removeAttribute('hidden');
+    });
   }
 
   function apply(rel, source) {
     state.release = rel; state.source = source;
     api.os = state.os; api.platform = state.platform; api.release = rel;
     setRoot();
-    var p = state.platform, os = state.os, a = rel.assets[p];
+    var p = state.platform, os = state.os, hp = heroPick(rel);
     try {
-      var mode = os === 'mac' ? 'copy' : a ? 'file' : 'page';
+      var mode = os === 'mac' ? 'copy' : hp ? 'file' : 'page';
       all('[data-dl="auto"]').forEach(function (el) {
-        el.setAttribute('href', mode === 'file' ? a.url : '#download');
+        el.setAttribute('href', mode === 'file' ? hp.asset.url : '#download');
         el.setAttribute('data-dl-platform', p);
         el.setAttribute('data-dl-mode', mode);
         var label = el.querySelector('[data-dl-label]');
@@ -235,6 +321,11 @@
           el.hidden = false;
         } else { el.hidden = true; }
       });
+      if (APP) {
+        showHead();
+        applyOffers(rel);
+        all('#cmd-mac').forEach(function (el) { setText(el, MAC_CMD); });
+      }
       all('#cmd-winget').forEach(function (el) { setText(el, 'winget install ' + WINGET_ID); });
       all('[data-dl-store]').forEach(function (el) { el.setAttribute('href', os === 'win' ? STORE_APP : STORE_WEB); });
       var note = os === 'win' ? "The installer isn't signed yet: More info \u2192 Run anyway."

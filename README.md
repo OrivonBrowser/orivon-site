@@ -34,6 +34,31 @@ npm run check-release   # change nothing; exit 1 if site/ lags the latest releas
 
 A push to `main` runs `.github/workflows/pages.yml`: it runs `sync-release` (a failure there is ignored), builds both, deploys `build/` to GitHub Pages and keeps `build-web3/` as the `web3-build` artifact.
 
+## Opening the page for one app: `?app=<id>`
+
+An app's page outside Orivon links to `https://download.orivonstack.eth.limo/?app=<id>` (and the same path on the Web2 site). The page then names the app and offers the package that opens it on first run:
+
+- **Allowlist only.** The ids are the six apps in `site/assets/js/orivon-flavours.js` (explore, webtorrent, asgardex, thelounge, freetube, element), each with its display name and `.eth` address. Anything else in `?app=` (an unknown id, capitals, a URL, script text, a repeated parameter) is ignored and the page renders as without it. The query string is never written into the page or sent anywhere; only the allowlisted name is shown, through `textContent`.
+- **Windows and Linux.** If the latest release has the tagged package (`Orivon-Setup-<ver>-x64.<id>.exe`, `Orivon-<ver>-x86_64.<id>.AppImage`, the same bytes as the plain ones), the page offers it, with "After installing, Orivon opens <App>." and the file's own SHA-256. If not, it offers the plain package and says nothing about opening the app. On Linux the hero button points at the tagged AppImage instead of the .deb only when that file exists.
+- **macOS.** The install command carries the id: `curl -fsSL .../install-macos.sh | bash -s <id>`, in the panel, the hero copy button and its detail line.
+- **Open in Orivon.** A link `orivon:open?u=<address>&flavour=<id>` and a "Copy address" button (`ipfs://<address>`) for people who already have Orivon. Both sit behind `OPEN_IN_ORIVON` at the top of `site/assets/js/orivon-download.js`, which is `false` until a released Orivon handles `orivon:` links; set it to `true` then.
+- **No JavaScript.** The parameter needs JavaScript; without it the page is the plain download page.
+- **IPFS copy.** Nothing depends on the origin: the same relative files serve `build-web3/`.
+
+`sync-release` also records the tagged packages a release carries (ids from the allowlist only; none is fine) in the fallback block of `orivon-download.js`.
+
+### Keeping the allowlist honest
+
+`orivon-flavours.js` copies `resources/flavours.json` of `OrivonBrowser/orivon-mvp` by hand. `npm run check-flavours` compares id, name and address with that file on its `main` branch (`-- --ref <branch>` for another; it passes with a note while the file is not on the ref), and `.github/workflows/release-links.yml` runs it on every pull request, push and daily, so an app added to or removed from the browser turns the check red until the list here follows.
+
+```
+npm test                 # pure functions (?app= parsing, picking the offered package) and sync-release's tagged records
+npm run check-page       # headless Chromium on the page: valid and invalid ?app= values, per OS, with and without tagged packages
+npm run check-flavours   # the allowlist against the browser's
+```
+
+`check-page` needs Playwright; it looks in `PLAYWRIGHT_DIR` (default `../orivon-mvp`) and skips when there is none.
+
 ## Constraints
 
 - Plain HTML, CSS and vanilla JS. No framework, no build step for the page itself, no dependencies.
