@@ -95,7 +95,18 @@ await scenario('windows, release without tagged packages', { os: 'win', query: '
   assert.equal(await text(page, '[data-app-name]'), 'FreeTube');
   assert.equal(await vis(page, '[data-app-offer="win"]'), false);
   assert.doesNotMatch(await page.locator('body').innerText(), /After installing, Orivon opens/);
-  assert.match(await page.locator('[data-dl="auto"]').first().getAttribute('href'), /Orivon-Setup-0\.0\.9-x64\.exe$/);
+  assert.match(await page.locator('[data-dl="auto"]').first().getAttribute('href'), /^ms-windows-store:\/\/pdp\/\?/);
+});
+await scenario('windows: the Store first, then winget, then the installer', { os: 'win', query: '' }, async (page) => {
+  const hero = page.locator('[data-dl="auto"]').first();
+  assert.match(await hero.getAttribute('href'), /^ms-windows-store:\/\/pdp\/\?/);
+  assert.equal(await hero.getAttribute('data-dl-mode'), 'store');
+  assert.equal(await text(page, '[data-dl="detail"]'), 'Free on the Microsoft Store \u00b7 Windows 10 and 11');
+  assert.equal(await text(page, '[data-dl="alt"]'), 'winget or installer');
+  assert.deepEqual(await page.locator('#panel-win h4').allInnerTexts(), ['Microsoft Store', 'winget', 'Installer (.exe)']);
+  assert.match(await page.locator('#panel-win .dl-rec [data-dl-store]').getAttribute('href'), /^ms-windows-store:\/\/pdp\/\?/);
+  await hero.click({ trial: true });
+  assert.equal(await vis(page, '[data-dl="hint"][data-for="win"]'), false, 'no SmartScreen hint for the Store');
 });
 await scenario('linux, tagged AppImage in the release', { os: 'linux', query: '?app=freetube' }, async (page) => {
   assert.ok(await vis(page, '[data-app-offer="linux"]'));

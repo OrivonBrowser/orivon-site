@@ -12,23 +12,25 @@
  *
  * DATA-ATTRIBUTE API (all optional, any element, any number of each)
  *   [data-dl="auto"]     Hero button. Its href and action depend on the detected OS:
- *                          win     href = the .exe installer, text unchanged. A click downloads it and reveals
- *                                  [data-dl="hint"][data-for="win"] (the SmartScreen steps).
+ *                          win     href = the Microsoft Store app link (ms-windows-store://pdp/...), text unchanged.
+ *                                  With ?app= and a tagged installer in the release: href = that .exe, and a click
+ *                                  downloads it and reveals [data-dl="hint"][data-for="win"] (the SmartScreen steps).
  *                          mac     a copy action: a click copies MAC_CMD (href stays #download as the fallback if
  *                                  copying is impossible). Label -> "Copy install command", then "Copied. Paste it
  *                                  in Terminal" for 4 s, and [data-dl="hint"][data-for="mac"] is revealed.
  *                          linux   href = the .deb.   mobile/unknown: href "#download", text unchanged.
- *                        Gets data-dl-platform and data-dl-mode (copy | file | page). The label is the
+ *                        Gets data-dl-platform and data-dl-mode (store | copy | file | page). The label is the
  *                        child [data-dl-label] (text only changes on mac); icons: child .ico-dl and .ico-copy.
- *   [data-dl="detail"]   Text: win "v0.0.5 · Windows · .exe · 134 MB"; mac the shortened command
+ *   [data-dl="detail"]   Text: win "Free on the Microsoft Store · Windows 10 and 11"; mac the shortened command
  *                        "curl -fsSL …/install-macos.sh | bash" (class is-cmd, title = full command);
  *                        linux "v0.0.5 · Linux · .deb · 122 MB"; mobile: "A desktop browser for Linux,
  *                        Windows and macOS"; unknown: "For Linux, Windows and macOS".
- *   [data-dl="alt"]      Secondary choice. win: "winget or Microsoft Store" -> #download; mac: "Prefer a .dmg?" ->
+ *   [data-dl="alt"]      Secondary choice. win: "winget or installer" -> #download; mac: "Prefer a .dmg?" ->
  *                        the .dmg for this Mac (Apple silicon or Intel); linux: "AppImage for any distro".
  *                        Otherwise hidden=true; when shown the hidden attribute is removed.
  *   [data-dl="hint"]     Hint under the hero button for the OS in its data-for (win | mac, default mac); hidden
- *                        until the hero was used on that OS (win: the download started; mac: the command copied).
+ *                        until the hero was used on that OS (win: the tagged installer's download started; mac:
+ *                        the command copied).
  *   [data-dl="note"]     First-run hint. win: "The installer isn't signed yet: More info → Run anyway."
  *                        mac: "First open: System Settings → Privacy & Security → Open Anyway."
  *                        else empty string.
@@ -64,7 +66,8 @@
  *     [data-app-pkg]        href = the tagged package;  [data-app-size], [data-app-sha] (full hex, hidden without a digest)
  *     [data-app-opens]      "After installing, Orivon opens <name>."
  *   macOS always gets the id in the install command (#cmd-mac, the hero copy and its detail line).
- *   The hero offers the tagged .exe on Windows and the tagged AppImage on Linux when the release has them.
+ *   The hero offers the tagged .exe on Windows (instead of the Store) and the tagged AppImage on Linux when the
+ *   release has them.
  *
  * OUTPUTS
  *   <html data-os="win|mac|linux|mobile|unknown" data-arch="arm64|x64|" data-platform="<asset key>|">
@@ -234,10 +237,16 @@
     }
     return rel.assets[p] ? { asset: rel.assets[p], tagged: false, key: p } : null;
   }
+  // Windows opens the Store, unless ?app= has a tagged installer: only that one opens the app.
+  function heroMode(hp) {
+    var os = state.os;
+    return os === 'mac' ? 'copy' : os === 'win' && !(hp && hp.tagged) ? 'store' : hp ? 'file' : 'page';
+  }
   function detailText(rel) {
     var os = state.os, hp = heroPick(rel);
     if (os === 'mobile') return 'A desktop browser for Linux, Windows and macOS';
     if (os === 'mac') return MAC_CMD_SHORT;
+    if (heroMode(hp) === 'store') return 'Free on the Microsoft Store \u00b7 Windows 10 and 11';
     if (!hp) return 'For Linux, Windows and macOS';
     var label = { 'win-x64': 'Windows · .exe', 'mac-arm64': 'macOS · Apple silicon', 'mac-x64': 'macOS · Intel', 'linux-deb': 'Linux · .deb', 'linux-appimage': 'Linux · AppImage' }[hp.key];
     return rel.tag + ' · ' + label + ' · ' + mb(hp.asset.size) + (hp.tagged ? ' · opens ' + APP.name : '');
@@ -289,9 +298,9 @@
     setRoot();
     var p = state.platform, os = state.os, hp = heroPick(rel);
     try {
-      var mode = os === 'mac' ? 'copy' : hp ? 'file' : 'page';
+      var mode = heroMode(hp);
       all('[data-dl="auto"]').forEach(function (el) {
-        el.setAttribute('href', mode === 'file' ? hp.asset.url : '#download');
+        el.setAttribute('href', mode === 'store' ? STORE_APP : mode === 'file' ? hp.asset.url : '#download');
         el.setAttribute('data-dl-platform', p);
         el.setAttribute('data-dl-mode', mode);
         var label = el.querySelector('[data-dl-label]');
@@ -310,7 +319,7 @@
       var altText = { 'linux-appimage': 'AppImage for any distro', 'mac-x64': 'Prefer a .dmg?', 'mac-arm64': 'Prefer a .dmg?' }[altKey];
       all('[data-dl="alt"]').forEach(function (el) {
         if (os === 'win') {
-          setText(el, 'winget or Microsoft Store');
+          setText(el, 'winget or installer');
           el.setAttribute('href', '#download');
           el.removeAttribute('hidden');
           el.hidden = false;
@@ -455,7 +464,7 @@
       if (hero && (state.os === 'mac' || state.os === 'win')) {
         if (e.defaultPrevented || e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         if (state.os === 'win') {
-          // The link itself starts the download; only the SmartScreen hint is added.
+          // The link itself opens the Store or starts the download; a download adds the SmartScreen hint.
           if (hero.getAttribute('data-dl-mode') === 'file') onHeroDownload();
           return;
         }
