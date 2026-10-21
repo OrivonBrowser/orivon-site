@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orivon: your download is starting</title>
+<meta name="description" content="Starts the download of the latest Orivon for your system.">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/img/icon-48.png">
+<!-- Without JavaScript there is nothing to detect the system with: send the visitor to the downloads. -->
+<noscript><meta http-equiv="refresh" content="0;url=https://www.orivonstack.com/#download"></noscript>
+<style>
+  :root { --bg: #f4f8fc; --ink: #14183a; --link: #4a2fc4; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0b1030; --ink: #e9ecff; --link: #b9a8ff; } }
+  html, body { height: 100%; margin: 0; }
+  body { display: grid; place-items: center; background: var(--bg); color: var(--ink); font: 17px/1.5 system-ui, sans-serif; text-align: center; padding: 0 16px; }
+  a { color: var(--link); font-weight: 600; }
+</style>
+</head>
+<body>
+<p id="msg">Your download of Orivon is starting.<br>If nothing happens, <a href="https://www.orivonstack.com/#download">choose a download</a>.</p>
+
+<!-- orivon-download.js picks the system and the newest release (live from api.github.com, else its baked copy).
+     When the system has a package, go straight to it; the file downloads and this page stays. Phones and unknown
+     systems have no package, so they go to the downloads on the main site. -->
+<script src="assets/js/orivon-flavours.js" defer></script>
+<script src="assets/js/orivon-download.js" defer></script>
+<!-- An inline script ignores defer: wait for DOMContentLoaded, which fires after the two scripts above have run. -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var D = window.OrivonDownload, home = 'https://www.orivonstack.com/#download';
+    function go() {
+      var a = D && D.release && D.release.assets && D.release.assets[D.platform];
+      location.replace(a && a.url ? a.url : home);
+    }
+    if (D && D.ready) D.ready.then(go, function () { location.replace(home); });
+    else location.replace(home);
+  });
+</script>
+</body>
+</html>

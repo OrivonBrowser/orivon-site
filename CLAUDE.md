@@ -13,6 +13,7 @@ The release website of Orivon (www.orivonstack.com). Plain static site in `site/
 
 - `npm run serve` serves `site/` on port 4320.
 - `npm run build` writes `build/` (the Web2 site plus `CNAME`). `npm run build:web3` also writes `build-web3/`.
+- `npm run build:latest` also writes `build-latest/`, the latest.orivonstack.com redirect (`site-latest/`), deployed by the OrivonBrowser/orivon-latest repository. `npm run check-latest` checks it headless.
 - Heavy tools (browsers, bundlers) only through the machine's heavy-command wrapper, one at a time.
 
 ## The Web2/Web3 standard

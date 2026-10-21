@@ -5,11 +5,13 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:web3": "node scripts/build.mjs --web3",
+    "build:latest": "node scripts/build.mjs --latest",
     "sync-release": "node scripts/sync-release.mjs",
     "check-release": "node scripts/sync-release.mjs --check",
     "serve": "python3 -m http.server 4320 -d site",
     "check-flavours": "node scripts/check-flavours.mjs",
     "test": "node --test test/*.test.mjs",
-    "check-page": "node test/page-check.mjs"
+    "check-page": "node test/page-check.mjs",
+    "check-latest": "node test/latest-check.mjs"
   }
 }
