@@ -5,7 +5,7 @@ The release website of Orivon (www.orivonstack.com). Plain static site in `site/
 ## Build constraints
 
 - Plain HTML, CSS, vanilla JS. No framework, no build step for the page, never add dependencies, never `npm install`.
-- Zero third-party requests except `api.github.com` (live release). Self-hosted fonts only.
+- Zero third-party requests except `api.github.com` (live release; the Web3 build asks `latest.orivonstack.eth.limo` instead). Self-hosted fonts only.
 - Relative links only (works from any path, including an IPFS gateway). Responsive from 360 px, keyboard-navigable, WCAG AA contrast, readable with JS off, light and dark designed.
 - Copy: only facts the public README and docs support. No competitor names, no roadmap, no invented numbers or partners. English, British spelling.
 
@@ -18,7 +18,9 @@ The release website of Orivon (www.orivonstack.com). Plain static site in `site/
 
 ## The Web2/Web3 standard
 
-`build/` is the Web2 site (www.orivonstack.com, GitHub Pages). `build-web3/` is the same files with every Orivon address pointed at its `.eth.limo` twin (www.orivonstack.com and orivonstack.com to www.orivonstack.eth.limo, docs.orivonstack.com to docs.orivonstack.eth.limo), via `scripts/web3-links.mjs`, which is shared byte for byte by every Orivon repository that builds a static site: do not edit it here. The Web3 build is published on IPFS behind the IPNS name that www.orivonstack.eth and download.orivonstack.eth point to. Source files keep Web2 addresses; never hand-edit `.eth.limo` variants of Orivon's own sites into `site/`.
+`build/` is the Web2 site (www.orivonstack.com, GitHub Pages). `build-web3/` is the same files with every Orivon address pointed at its `.eth.limo` twin (www.orivonstack.com and orivonstack.com to www.orivonstack.eth.limo, docs.orivonstack.com to docs.orivonstack.eth.limo), via `scripts/web3-links.mjs`, which is shared byte for byte by every Orivon repository that builds a static site: do not edit it here. The Web3 build is published on IPFS behind the IPNS name that www.orivonstack.eth, orivonstack.eth and download.orivonstack.eth point to. Source files keep Web2 addresses; never hand-edit `.eth.limo` variants of Orivon's own sites into `site/`.
+
+The Web3 build hands no download to GitHub: `build.mjs --web3` (`web3Downloads`) points every package link at `https://latest.orivonstack.eth.limo/<file>` and sets `LATEST` in its copy of `orivon-download.js`, which then reads the newest release from that folder's start page (written by orivon-mvp `scripts/pin-releases.sh`, IPNS key `latest-release`) instead of api.github.com. Keep `LATEST` empty in `site/`. The macOS command, winget and the Store stay as they are (owner: the visitor knowingly goes there).
 
 ## Release links
 

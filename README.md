@@ -1,6 +1,6 @@
 # Orivon website
 
-The source of [www.orivonstack.com](https://www.orivonstack.com), the release page of the Orivon desktop Web3 browser. The same site is published on IPFS as `www.orivonstack.eth` and `download.orivonstack.eth` (the second one opens at the download section).
+The source of [www.orivonstack.com](https://www.orivonstack.com), the release page of the Orivon desktop Web3 browser. The same site is published on IPFS as `www.orivonstack.eth`, `orivonstack.eth` and `download.orivonstack.eth` (the last one opens at the download section).
 
 ## Run it locally
 
@@ -17,7 +17,9 @@ npm run build        # build/       the Web2 site, with CNAME www.orivonstack.co
 npm run build:web3   # also build-web3/   the Web3 site
 ```
 
-`build/` is the Web2 site. `build-web3/` holds the same files with every address of an Orivon site pointing at its `.eth.limo` twin: `www.orivonstack.com` and `orivonstack.com` become `www.orivonstack.eth.limo`, and `docs.orivonstack.com` becomes `docs.orivonstack.eth.limo`. The rewrite is done by `scripts/web3-links.mjs`, the file shared by every Orivon repository that builds a static site. eth.limo serves `.eth` names to any browser, and Orivon resolves them itself, so the Web3 build works in both. The Web3 build is what is published on IPFS, behind the IPNS name that `www.orivonstack.eth` and `download.orivonstack.eth` point to.
+`build/` is the Web2 site. `build-web3/` holds the same files with every address of an Orivon site pointing at its `.eth.limo` twin: `www.orivonstack.com` and `orivonstack.com` become `www.orivonstack.eth.limo`, and `docs.orivonstack.com` becomes `docs.orivonstack.eth.limo`. The rewrite is done by `scripts/web3-links.mjs`, the file shared by every Orivon repository that builds a static site. eth.limo serves `.eth` names to any browser, and Orivon resolves them itself, so the Web3 build works in both. The Web3 build is what is published on IPFS, behind the IPNS name that `www.orivonstack.eth`, `orivonstack.eth` and `download.orivonstack.eth` point to.
+
+The Web3 build also hands no download to GitHub. `latest.orivonstack.eth` always opens the newest release on IPFS: its files under their own names plus a start page listing them, a folder the release pinner of `OrivonBrowser/orivon-mvp` (`scripts/pin-releases.sh`) moves the IPNS key `latest-release` to after each release. `build:web3` points every package link at that folder (`https://latest.orivonstack.eth.limo/<file>`) and sets `LATEST` in its copy of `orivon-download.js`, so the page reads the newest release from the folder's start page instead of api.github.com and offers the package the visitor picks from there, on the same page. The folder lists no checksums: a release newer than the baked one shows its packages without them until `sync-release` runs and the Web3 build is published again. If the folder cannot be read, the baked release is offered, still from the folder. The macOS install command, winget and the Microsoft Store stay as they are, since the visitor knowingly goes to them. `site/` keeps `LATEST` empty: the Web2 site and latest.orivonstack.com use GitHub.
 
 Source files keep the Web2 addresses. Never hand-edit `.eth.limo` variants of Orivon's own sites into `site/`.
 
@@ -64,7 +66,7 @@ An app's page outside Orivon links to `https://download.orivonstack.eth.limo/?ap
 
 ```
 npm test                 # pure functions (?app= parsing, picking the offered package) and sync-release's tagged records
-npm run check-page       # headless Chromium on the page: valid and invalid ?app= values, per OS, with and without tagged packages
+npm run check-page       # headless Chromium on the page: valid and invalid ?app= values, per OS, with and without tagged packages; and the Web3 build's downloads
 npm run check-flavours   # the allowlist against the browser's
 ```
 
@@ -73,7 +75,7 @@ npm run check-flavours   # the allowlist against the browser's
 ## Constraints
 
 - Plain HTML, CSS and vanilla JS. No framework, no build step for the page itself, no dependencies.
-- Zero third-party requests, except `api.github.com` for the live release (with a baked fallback). Fonts are self-hosted (see `site/assets/fonts/README.txt`).
+- Zero third-party requests, except `api.github.com` for the live release (with a baked fallback). The Web3 build asks `latest.orivonstack.eth.limo` instead and sends nothing to GitHub. Fonts are self-hosted (see `site/assets/fonts/README.txt`).
 - Relative links only, so the site works from any path, including an IPFS gateway.
 - Responsive from 360 px, keyboard-navigable, readable with JavaScript off. Light and dark themes.
 

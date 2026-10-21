@@ -4,11 +4,15 @@
  * Works with a baked fallback release (TAG below) immediately, then upgrades to the live GitHub release
  * (api.github.com, 4 s timeout, cached 15 min in sessionStorage). Without JS the page keeps
  * whatever static hrefs you wrote (hero -> #download, packages -> baked URLs, Store -> web link).
+ * With LATEST set (the Web3 build) nothing comes from GitHub: every package downloads from the LATEST folder, and
+ * the live release is the one that folder's start page lists (8 s timeout, no request to api.github.com).
  *
  * CONFIG (top of the IIFE)
  *   STORE      Microsoft Store identity. productId (the id from Partner Center) makes every Store link open
  *              Orivon's Store page; without it the package family name (pfn) and a Store search are used.
  *   WINGET_ID  the winget package id, MAC_CMD  the one-line macOS install command.
+ *   LATEST     '' (GitHub), or the address of the folder that always holds the newest release, with a trailing
+ *              slash. scripts/build.mjs --web3 sets it to latest.orivonstack.eth; keep it '' here.
  *
  * DATA-ATTRIBUTE API (all optional, any element, any number of each)
  *   [data-dl="auto"]     Hero button. Its href and action depend on the detected OS:
@@ -72,9 +76,9 @@
  * OUTPUTS
  *   <html data-os="win|mac|linux|mobile|unknown" data-arch="arm64|x64|" data-platform="<asset key>|">
  *     (data-os / data-platform are set synchronously at load; Apple silicon vs Intel refined shortly after.)
- *   window.OrivonDownload = { os, platform, release, ready: Promise, app: the ?app= entry or null, buildRelease(list) }  (ready resolves after the live apply
- *     or after the live fetch failed and the fallback stays).
- *   document event "orivon:download-ready", detail {source: "fallback" | "api"}, fired after every apply.
+ *   window.OrivonDownload = { os, platform, release, ready: Promise, app: the ?app= entry or null, buildRelease(list),
+ *     buildLatest(html) }  (ready resolves after the live apply or after the live fetch failed and the fallback stays).
+ *   document event "orivon:download-ready", detail {source: "fallback" | "api" | "latest"}, fired after every apply.
  *   Never throws or logs to the console: API down, storage blocked, clipboard denied, missing elements are all fine.
  */
 (function () {
@@ -86,6 +90,8 @@
   var MAC_CMD_SHORT = 'curl -fsSL \u2026/install-macos.sh | bash';
   // The "Open in Orivon" link needs a released Orivon that handles orivon: links. Keep false until one is out.
   var OPEN_IN_ORIVON = false;
+  // Where the packages download from: '' is the GitHub release; the Web3 build sets the latest.orivonstack.eth folder.
+  var LATEST = '';
   var F = window.OrivonFlavours || null;
   var APP = null;
   try { APP = F ? F.parseApp(location.search) : null; } catch (e) { APP = null; }
@@ -96,7 +102,8 @@
   var REPO = 'OrivonBrowser/orivon-mvp';
   var GH = 'https://github.com/' + REPO;
   var API = 'https://api.github.com/repos/' + REPO + '/releases?per_page=10';
-  var CACHE_KEY = 'orivon-dl-v1', CACHE_MS = 15 * 60 * 1000, TIMEOUT_MS = 4000;
+  // eth.limo may first have to resolve the IPNS name behind latest.orivonstack.eth, hence the longer wait there.
+  var CACHE_KEY = 'orivon-dl-v1', CACHE_MS = 15 * 60 * 1000, TIMEOUT_MS = LATEST ? 8000 : 4000;
   var KEYS = ['win-x64', 'mac-arm64', 'mac-x64', 'linux-deb', 'linux-appimage'];
   var PATTERNS = {
     'win-x64': /^Orivon-Setup-.+-x64\.exe$/,
@@ -126,6 +133,15 @@
   };
   // release:end
 
+  // The latest folder holds the release's files under their own names.
+  function onLatest(a) { return { name: a.name, url: LATEST + a.name, size: a.size, sha: a.sha }; }
+  if (LATEST) {
+    KEYS.forEach(function (key) { FALLBACK.assets[key] = onLatest(FALLBACK.assets[key]); });
+    Object.keys(FALLBACK.tagged).forEach(function (id) {
+      Object.keys(FALLBACK.tagged[id]).forEach(function (key) { FALLBACK.tagged[id][key] = onLatest(FALLBACK.tagged[id][key]); });
+    });
+  }
+
   var doc = document, root = doc.documentElement, nav = navigator;
 
   // ---- detection -------------------------------------------------------------------------------
@@ -143,7 +159,7 @@
   }
   var det = detect();
   var state = { os: det.os, platform: det.platform, release: FALLBACK, source: 'fallback' };
-  var api = window.OrivonDownload = { os: det.os, platform: det.platform, release: FALLBACK, ready: null, app: APP, buildRelease: null };
+  var api = window.OrivonDownload = { os: det.os, platform: det.platform, release: FALLBACK, ready: null, app: APP, buildRelease: null, buildLatest: null };
 
   function archOf(p) {
     return p === 'mac-arm64' ? 'arm64' : (p === 'win-x64' || p === 'mac-x64' || p === 'linux-deb') ? 'x64' : '';
@@ -213,7 +229,46 @@
     };
   }
 
+  // ---- release model from the latest folder (the Web3 build) ----------------------------------
+  // Its start page is written by orivon-mvp's release pinner (scripts/pin-releases.sh, start_page): <title>Orivon
+  // <version></title>, then <a href="./<file>" download><file></a> <span><n> MB</span> for each file. It lists no
+  // checksums, so a package keeps a digest only when it is the baked file; sizes are the whole MB that page shows.
+  var SAFE_NAME = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
+  function buildLatest(html) {
+    if (typeof html !== 'string') return null;
+    var title = /<title>Orivon ([0-9A-Za-z.+-]+)<\/title>/.exec(html);
+    if (!title) return null;
+    var tag = 'v' + title[1], same = tag === FALLBACK.tag;
+    var files = [], re = /<a href="\.\/([^"]+)"[^>]*>[^<]*<\/a>(?:\s*<span>(\d+) MB<\/span>)?/g, m;
+    while ((m = re.exec(html))) if (SAFE_NAME.test(m[1])) files.push({ name: m[1], size: m[2] ? +m[2] * 1e6 : 0 });
+    function record(f, b) { return b && b.name === f.name ? b : { name: f.name, url: LATEST + f.name, size: f.size, sha: '' }; }
+    var assets = {}, any = false;
+    KEYS.forEach(function (key) {
+      var f = null;
+      for (var i = 0; i < files.length && !f; i++) if (PATTERNS[key].test(files[i].name)) f = files[i];
+      if (f) any = true;
+      assets[key] = f ? record(f, FALLBACK.assets[key]) : FALLBACK.assets[key];
+    });
+    if (!any) return null;
+    var tagged = {};
+    if (F) files.forEach(function (f) {
+      ['win-x64', 'linux-appimage'].forEach(function (key) {
+        var id = F.taggedId(key, f.name);
+        if (id) (tagged[id] = tagged[id] || {})[key] = record(f, FALLBACK.tagged[id] && FALLBACK.tagged[id][key]);
+      });
+    });
+    return {
+      tag: tag,
+      published: same ? FALLBACK.published : '',
+      url: GH + '/releases/tag/' + tag,
+      cid: same ? FALLBACK.cid : '',
+      assets: assets,
+      tagged: tagged
+    };
+  }
+
   api.buildRelease = buildRelease;
+  api.buildLatest = buildLatest;
 
   // ---- DOM binding -----------------------------------------------------------------------------
   function all(sel, from) { try { return Array.prototype.slice.call((from || doc).querySelectorAll(sel)); } catch (e) { return []; } }
@@ -488,22 +543,26 @@
   function writeCache(data) {
     try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), data: data })); } catch (e) {}
   }
-  function fetchLive() {
-    var cached = readCache();
-    if (cached) return Promise.resolve(cached);
+  // Resolves to the body read by read(res), or null on any failure or after TIMEOUT_MS.
+  function get(url, opts, read) {
     if (typeof fetch !== 'function') return Promise.resolve(null);
     var ctl = typeof AbortController === 'function' ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctl) ctl.abort(); }, TIMEOUT_MS);
-    var opts = { headers: { Accept: 'application/vnd.github+json' } };
     if (ctl) opts.signal = ctl.signal;
-    return fetch(API, opts).then(function (res) {
+    return fetch(url, opts).then(function (res) {
       if (!res.ok) throw new Error('http');
-      return res.json();
-    }).then(function (data) {
-      clearTimeout(timer);
+      return read(res);
+    }).then(function (data) { clearTimeout(timer); return data; }, function () { clearTimeout(timer); return null; });
+  }
+  // The Web3 build reads the latest folder's start page (the gateway's own cache applies); the Web2 build the API.
+  function fetchLive() {
+    if (LATEST) return get(LATEST, {}, function (res) { return res.text(); });
+    var cached = readCache();
+    if (cached) return Promise.resolve(cached);
+    return get(API, { headers: { Accept: 'application/vnd.github+json' } }, function (res) { return res.json(); }).then(function (data) {
       if (Array.isArray(data)) writeCache(data);
       return data;
-    }).catch(function () { clearTimeout(timer); return null; });
+    });
   }
 
   var domReady = new Promise(function (resolve) {
@@ -529,8 +588,8 @@
   });
 
   api.ready = refined.then(fetchLive).then(function (data) {
-    var rel = buildRelease(data);
-    apply(rel || state.release, rel ? 'api' : state.source);
+    var rel = LATEST ? buildLatest(data) : buildRelease(data);
+    apply(rel || state.release, rel ? (LATEST ? 'latest' : 'api') : state.source);
     return api;
   }).catch(function () { return api; });
 })();
