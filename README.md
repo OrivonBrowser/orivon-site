@@ -34,6 +34,17 @@ npm run check-release   # change nothing; exit 1 if site/ lags the latest releas
 
 A push to `main` runs `.github/workflows/pages.yml`: it runs `sync-release` (a failure there is ignored), builds both, deploys `build/` to GitHub Pages and keeps `build-web3/` as the `web3-build` artifact.
 
+## latest.orivonstack.com
+
+`latest.orivonstack.com` starts the download of the newest installer for the visitor's system: the `.exe` on Windows, the `.dmg` for Apple silicon or Intel on macOS, the `.deb` on Linux. Phones, unknown systems and browsers without JavaScript go to `www.orivonstack.com/#download`. It is `site-latest/index.html` plus the site's own `orivon-download.js`, so the system detection and the live release are the same as on the main page.
+
+```
+npm run build:latest   # also build-latest/   the redirect, with CNAME latest.orivonstack.com
+npm run check-latest   # headless check of where each system is sent (Playwright, as check-page)
+```
+
+A Pages site has one domain, so the redirect is deployed by [OrivonBrowser/orivon-latest](https://github.com/OrivonBrowser/orivon-latest), whose workflow checks out this repository, runs `sync-release` and `build:latest` and publishes `build-latest/`. A push here does not trigger it; it rebuilds daily. A new release is offered at once anyway, because the page reads the live release from api.github.com and uses the baked one only when that fails.
+
 ## Opening the page for one app: `?app=<id>`
 
 An app's page outside Orivon links to `https://download.orivonstack.eth.limo/?app=<id>` (and the same path on the Web2 site). The page then names the app and offers the package that opens it on first run:
