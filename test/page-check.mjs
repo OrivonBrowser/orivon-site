@@ -76,6 +76,8 @@ async function scenario(name, { os, query, tagged = true, js = true, openInOrivo
   }
   await ctx.close();
 }
+// Orivon's Microsoft Store listing: the app link on Windows, the web page elsewhere and without JavaScript.
+const STORE_APP = 'ms-windows-store://pdp/?ProductId=9MXV3FNMFBP4', STORE_WEB = 'https://apps.microsoft.com/detail/9MXV3FNMFBP4';
 const vis = (page, sel) => page.locator(sel).first().isVisible();
 const text = (page, sel) => page.locator(sel).first().innerText();
 const downloadHtml = (page) => page.evaluate(() => document.getElementById('download').innerHTML);
@@ -95,16 +97,16 @@ await scenario('windows, release without tagged packages', { os: 'win', query: '
   assert.equal(await text(page, '[data-app-name]'), 'FreeTube');
   assert.equal(await vis(page, '[data-app-offer="win"]'), false);
   assert.doesNotMatch(await page.locator('body').innerText(), /After installing, Orivon opens/);
-  assert.match(await page.locator('[data-dl="auto"]').first().getAttribute('href'), /^ms-windows-store:\/\/pdp\/\?/);
+  assert.equal(await page.locator('[data-dl="auto"]').first().getAttribute('href'), STORE_APP);
 });
 await scenario('windows: the Store first, then winget, then the installer', { os: 'win', query: '' }, async (page) => {
   const hero = page.locator('[data-dl="auto"]').first();
-  assert.match(await hero.getAttribute('href'), /^ms-windows-store:\/\/pdp\/\?/);
+  assert.equal(await hero.getAttribute('href'), STORE_APP);
   assert.equal(await hero.getAttribute('data-dl-mode'), 'store');
   assert.equal(await text(page, '[data-dl="detail"]'), 'Free on the Microsoft Store \u00b7 Windows 10 and 11');
   assert.equal(await text(page, '[data-dl="alt"]'), 'winget or installer');
   assert.deepEqual(await page.locator('#panel-win h4').allInnerTexts(), ['Microsoft Store', 'winget', 'Installer (.exe)']);
-  assert.match(await page.locator('#panel-win .dl-rec [data-dl-store]').getAttribute('href'), /^ms-windows-store:\/\/pdp\/\?/);
+  assert.equal(await page.locator('#panel-win .dl-rec [data-dl-store]').getAttribute('href'), STORE_APP);
   await hero.click({ trial: true });
   assert.equal(await vis(page, '[data-dl="hint"][data-for="win"]'), false, 'no SmartScreen hint for the Store');
 });
@@ -149,7 +151,11 @@ for (const os of ['win', 'mac', 'linux']) {
     });
   }
 }
+await scenario('macOS: the Store link opens the Store web page', { os: 'mac', query: '' }, async (page) => {
+  assert.equal(await page.locator('[data-dl-store]').first().getAttribute('href'), STORE_WEB);
+});
 await scenario('JavaScript off: the plain download page', { os: 'win', query: '?app=freetube', js: false }, async (page) => {
+  assert.equal(await page.locator('[data-dl-store]').first().getAttribute('href'), STORE_WEB);
   assert.equal(await vis(page, '[data-app-head]'), false);
   assert.equal(await vis(page, '[data-app-offer="win"]'), false);
   assert.ok(await vis(page, '#download h2'));
