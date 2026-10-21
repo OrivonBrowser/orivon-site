@@ -28,8 +28,9 @@ Never hand-edit the version, package hrefs, sizes, checksums or CID: `npm run sy
 
 - `site/assets/js/orivon-download.js` does OS detection, the hero button, package links, sizes and the live release. Its header comment documents every `data-*` attribute.
 - Constants at its top: `STORE` (Microsoft Store identity: set `productId` from Partner Center to switch every Store link to it), `WINGET_ID`, `MAC_CMD`.
-- Hero per OS: Windows opens the Store app link; macOS copies the install command; Linux downloads the .deb; mobile and unknown go to `#download`.
+- Hero per OS: Windows opens the Store app link (with `?app=` and a tagged installer in the release, it downloads that installer and shows the SmartScreen hint); macOS copies the install command; Linux downloads the .deb; mobile and unknown go to `#download`.
 - `#download` is an OS-tabbed panel (tabs built by `site/assets/js/site.js`; without JS all three panels stack). Copy buttons use `data-copy` or `data-copy-from=<id>`.
+- Windows panel order (owner's choice): Microsoft Store (Recommended), then winget (with a note that the package may not be available yet), then the .exe with the SmartScreen steps (`#install-win`).
 - The commands also stay literally in the HTML so they read with JS off.
 - `?app=<id>` (`site/assets/js/orivon-flavours.js` holds the allowlist and the pure functions; `orivon-download.js` binds them): only the six allowlisted ids count, anything else leaves the page as if there were no parameter, and only the allowlisted name is shown, via `textContent`. Never echo the query string. The list mirrors orivon-mvp `resources/flavours.json`; `npm run check-flavours` (in the release-links workflow) keeps it honest. The tagged `.exe` and `.AppImage` are offered only when the latest release has them (`sync-release` records them in the fallback). `OPEN_IN_ORIVON` in `orivon-download.js` stays `false` until a released Orivon handles `orivon:` links.
 - `site.js` also jumps to `#download` when the page is opened on a `download.` host.

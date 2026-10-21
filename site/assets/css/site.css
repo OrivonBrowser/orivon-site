@@ -689,17 +689,19 @@ html:not(.js-tabs) .dl-panel.is-detected { box-shadow: 0 0 0 2.5px var(--detecte
 .way { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .way + .way { border-top: 1px solid var(--line); padding-top: 22px; }
 .way h4 { font: 700 18px/1.2 var(--head); letter-spacing: -.01em; }
-.store-btn { align-self: flex-start; height: 52px; padding: 0 24px 0 20px; font-size: 16.5px; margin-top: 2px; background: transparent; color: var(--violet-text); box-shadow: inset 0 0 0 2px var(--violet-text); }
-.store-btn:hover { background: var(--violet-ink); color: #fff; box-shadow: none; }
-.store-btn svg { width: 22px; height: 22px; }
+.store-btn { align-self: flex-start; height: 62px; padding: 0 32px 0 26px; font-size: 19px; }
+.store-btn svg { width: 26px; height: 26px; }
 
-/* Windows: the installer card on top, then winget and the Store side by side */
-.win-rec { margin-top: 22px; gap: 18px; }
-.win-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 380px); gap: 16px 32px; align-items: end; }
-.win-intro { display: flex; flex-direction: column; gap: 14px; }
+/* Windows: the Store card on top, then winget, then the installer with its SmartScreen steps.
+   Each row is the text on the left and its action on the right. */
+.win-rec { margin-top: 22px; }
+.win-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 460px); gap: 16px 32px; align-items: center; }
+.win-intro { display: flex; flex-direction: column; gap: 10px; }
+.win-rec .win-intro { gap: 14px; }
+.win-act { display: flex; flex-direction: column; gap: 10px; }
+.win-act .store-btn { align-self: stretch; }
 .win-other { margin-top: 28px; }
-.ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 36px; }
-.ways .way + .way { border-top: 0; padding-top: 0; border-left: 1px solid var(--line); padding-left: 36px; }
+.way .ss { margin-top: 8px; }
 
 /* package links */
 .pkg { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 14px; background: var(--pkg-bg); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 15.5px; transition: background .15s, color .15s, transform .15s; }
@@ -900,8 +902,7 @@ kbd { display: inline-block; min-width: 24px; padding: 3px 7px 4px; border-radiu
 }
 
 @media (max-width: 860px) {
-  .dl-cols, .dl-cols.mac, .win-top, .ways { grid-template-columns: minmax(0, 1fr); }
-  .ways .way + .way { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 22px; }
+  .dl-cols, .dl-cols.mac, .win-top { grid-template-columns: minmax(0, 1fr); }
   .store-btn { align-self: stretch; }
 }
 @media (max-width: 720px) {
@@ -915,7 +916,8 @@ kbd { display: inline-block; min-width: 24px; padding: 3px 7px 4px; border-radiu
   .cmd { flex-direction: column; align-items: stretch; padding: 12px 14px 14px; }
   .cmd code { padding-top: 0; }
   .copy { justify-content: center; height: 42px; }
-  .store-btn { padding: 0 14px; font-size: 16px; gap: 10px; justify-content: center; }
+  .store-btn { padding: 0 14px; font-size: 16px; gap: 10px; height: 58px; }
+  .store-btn svg { width: 24px; height: 24px; }
 }
 @media (max-width: 360px) {
   .store-btn { font-size: 15px; }

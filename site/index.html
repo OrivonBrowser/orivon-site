@@ -421,68 +421,76 @@
           <div class="win-top">
             <div class="win-intro">
               <p class="dl-tag">Recommended</p>
-              <h4>Installer (.exe)</h4>
-              <p class="dl-line">Download it and open it. Orivon installs for your account, with no administrator needed.</p>
-            </div>
-            <a class="pkg" data-dl-asset="win-x64" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.8/Orivon-Setup-0.0.8-x64.exe"><span>Installer .exe<small>Windows, x64</small></span><span class="sz"><span data-dl-size="win-x64">137 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
-          </div>
-          <div class="ss" id="install-win">
-            <div class="ss-copy">
-              <h5>Windows asks once</h5>
-              <p class="ss-text">The installer isn&rsquo;t signed yet, so the first time you open it, Windows SmartScreen says &ldquo;Windows protected your PC&rdquo;. Click <strong>More info</strong>, then <strong>Run anyway</strong>, and the installer starts.</p>
-            </div>
-            <ol class="ss-frames" aria-label="Installing on Windows">
-              <li class="ss-step">
-                <div class="ss-dl" aria-hidden="true">
-                  <div class="ss-dl-title">Downloads</div>
-                  <div class="ss-dl-file">
-                    <img src="assets/img/icon-48.png" width="28" height="28" alt="">
-                    <span><b data-dl-name="win-x64">Orivon-Setup-0.0.8-x64.exe</b><small data-dl-size="win-x64">137 MB</small></span>
-                  </div>
-                  <div class="ss-more"><u>Open file</u><i class="ss-mk">1</i></div>
-                </div>
-                <p class="ss-cap"><i aria-hidden="true">1</i> Open the downloaded file</p>
-              </li>
-              <li class="ss-step">
-                <div class="ss-win" aria-hidden="true">
-                  <div class="ss-title">Windows protected your PC</div>
-                  <div class="ss-body">Microsoft Defender SmartScreen prevented an unrecognised app from starting.</div>
-                  <div class="ss-more"><u>More info</u><i class="ss-mk">2</i></div>
-                  <div class="ss-btns"><b class="ss-btn">Don&rsquo;t run</b></div>
-                </div>
-                <p class="ss-cap"><i aria-hidden="true">2</i> Click More info</p>
-              </li>
-              <li class="ss-step">
-                <div class="ss-win" aria-hidden="true">
-                  <div class="ss-title">Windows protected your PC</div>
-                  <div class="ss-body ss-kv"><span>App: <span data-dl-name="win-x64">Orivon-Setup-0.0.8-x64.exe</span></span><span>Publisher: Unknown publisher</span></div>
-                  <div class="ss-btns"><b class="ss-btn run">Run anyway<i class="ss-mk">3</i></b><b class="ss-btn">Don&rsquo;t run</b></div>
-                </div>
-                <p class="ss-cap"><i aria-hidden="true">3</i> Click Run anyway</p>
-              </li>
-            </ol>
-          </div>
-        </div>
-
-        <div class="dl-other win-other">
-          <p class="dl-tag plain">Other ways</p>
-          <div class="ways">
-            <div class="way">
-              <h4>winget</h4>
-              <div class="cmd">
-                <code id="cmd-winget">winget install Orivon.Browser.Preview</code>
-                <button class="copy" type="button" data-copy-from="cmd-winget" aria-label="Copy the winget command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6v3H9zM7 5.5H5.5v14h13v-14H17"/></svg><span>Copy</span></button>
-              </div>
-              <p class="dl-fine">Run it in Terminal or PowerShell.</p>
-            </div>
-            <div class="way">
               <h4>Microsoft Store</h4>
-              <p class="dl-fine">Signed by Microsoft, installs in one click, updates itself.</p>
+              <p class="dl-line">Signed by Microsoft, installs in one click and updates itself.</p>
+            </div>
+            <div class="win-act">
               <a class="btn store-btn" data-dl-store href="https://apps.microsoft.com/search?query=Orivon%20Browser" rel="noopener">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8.5h14l-1.1 11H6.1zM9 8.5V7a3 3 0 0 1 6 0v1.5"/><path d="M9.3 11.6h2.2v2.2H9.3zM12.6 11.6h2.2v2.2h-2.2zM9.3 14.9h2.2v2.2H9.3zM12.6 14.9h2.2v2.2h-2.2z" fill="currentColor" stroke-width="0"/></svg>
                 <span>Get it from Microsoft Store</span>
               </a>
               <p class="dl-fine">In the Store, press Get, then Open.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dl-other win-other">
+          <p class="dl-tag plain">Other ways</p>
+          <div class="way">
+            <div class="win-top">
+              <div class="win-intro">
+                <h4>winget</h4>
+                <p class="dl-fine">Run it in Terminal or PowerShell. The winget package is awaiting approval and may not be available yet. If winget cannot find it, use the Microsoft Store or the installer.</p>
+              </div>
+              <div class="cmd">
+                <code id="cmd-winget">winget install Orivon.Browser.Preview</code>
+                <button class="copy" type="button" data-copy-from="cmd-winget" aria-label="Copy the winget command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6v3H9zM7 5.5H5.5v14h13v-14H17"/></svg><span>Copy</span></button>
+              </div>
+            </div>
+          </div>
+          <div class="way">
+            <div class="win-top">
+              <div class="win-intro">
+                <h4>Installer (.exe)</h4>
+                <p class="dl-fine">Installs for your account, with no administrator needed.</p>
+              </div>
+              <a class="pkg" data-dl-asset="win-x64" href="https://github.com/OrivonBrowser/orivon-mvp/releases/download/v0.0.8/Orivon-Setup-0.0.8-x64.exe"><span>Installer .exe<small>Windows, x64</small></span><span class="sz"><span data-dl-size="win-x64">137 MB</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></span></a>
+            </div>
+            <div class="ss" id="install-win">
+              <div class="ss-copy">
+                <h5>Opening the installer</h5>
+                <p class="ss-text">The installer is not code-signed yet, so the first time you open it, Windows SmartScreen shows &ldquo;Windows protected your PC&rdquo;. Click <strong>More info</strong>, then <strong>Run anyway</strong>, and the installation continues.</p>
+              </div>
+              <ol class="ss-frames" aria-label="Installing on Windows">
+                <li class="ss-step">
+                  <div class="ss-dl" aria-hidden="true">
+                    <div class="ss-dl-title">Downloads</div>
+                    <div class="ss-dl-file">
+                      <img src="assets/img/icon-48.png" width="28" height="28" alt="">
+                      <span><b data-dl-name="win-x64">Orivon-Setup-0.0.8-x64.exe</b><small data-dl-size="win-x64">137 MB</small></span>
+                    </div>
+                    <div class="ss-more"><u>Open file</u><i class="ss-mk">1</i></div>
+                  </div>
+                  <p class="ss-cap"><i aria-hidden="true">1</i> Open the downloaded file</p>
+                </li>
+                <li class="ss-step">
+                  <div class="ss-win" aria-hidden="true">
+                    <div class="ss-title">Windows protected your PC</div>
+                    <div class="ss-body">Microsoft Defender SmartScreen prevented an unrecognised app from starting.</div>
+                    <div class="ss-more"><u>More info</u><i class="ss-mk">2</i></div>
+                    <div class="ss-btns"><b class="ss-btn">Don&rsquo;t run</b></div>
+                  </div>
+                  <p class="ss-cap"><i aria-hidden="true">2</i> Click More info</p>
+                </li>
+                <li class="ss-step">
+                  <div class="ss-win" aria-hidden="true">
+                    <div class="ss-title">Windows protected your PC</div>
+                    <div class="ss-body ss-kv"><span>App: <span data-dl-name="win-x64">Orivon-Setup-0.0.8-x64.exe</span></span><span>Publisher: Unknown publisher</span></div>
+                    <div class="ss-btns"><b class="ss-btn run">Run anyway<i class="ss-mk">3</i></b><b class="ss-btn">Don&rsquo;t run</b></div>
+                  </div>
+                  <p class="ss-cap"><i aria-hidden="true">3</i> Click Run anyway</p>
+                </li>
+              </ol>
             </div>
           </div>
         </div>
