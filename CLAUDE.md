@@ -27,7 +27,7 @@ Never hand-edit the version, package hrefs, sizes, checksums or CID: `npm run sy
 ## Download wiring
 
 - `site/assets/js/orivon-download.js` does OS detection, the hero button, package links, sizes and the live release. Its header comment documents every `data-*` attribute.
-- Constants at its top: `STORE` (Microsoft Store identity: set `productId` from Partner Center to switch every Store link to it), `WINGET_ID`, `MAC_CMD`.
+- Constants at its top: `STORE` (Microsoft Store identity: `productId` `9MXV3FNMFBP4` makes every Store link open Orivon's Store page, `ms-windows-store://pdp/?ProductId=` on Windows and `apps.microsoft.com/detail/` elsewhere and in the static HTML), `WINGET_ID`, `MAC_CMD`.
 - Hero per OS: Windows opens the Store app link (with `?app=` and a tagged installer in the release, it downloads that installer and shows the SmartScreen hint); macOS copies the install command; Linux downloads the .deb; mobile and unknown go to `#download`.
 - `#download` is an OS-tabbed panel (tabs built by `site/assets/js/site.js`; without JS all three panels stack). Copy buttons use `data-copy` or `data-copy-from=<id>`.
 - Windows panel order (owner's choice): Microsoft Store (Recommended), then winget (with a note that the package may not be available yet), then the .exe with the SmartScreen steps (`#install-win`).

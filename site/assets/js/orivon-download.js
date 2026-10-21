@@ -6,8 +6,8 @@
  * whatever static hrefs you wrote (hero -> #download, packages -> baked URLs, Store -> web link).
  *
  * CONFIG (top of the IIFE)
- *   STORE      Microsoft Store identity. Setting productId (the 9N... id from Partner Center) switches
- *              every Store link to it; until then the package family name (pfn) and a Store search are used.
+ *   STORE      Microsoft Store identity. productId (the id from Partner Center) makes every Store link open
+ *              Orivon's Store page; without it the package family name (pfn) and a Store search are used.
  *   WINGET_ID  the winget package id, MAC_CMD  the one-line macOS install command.
  *
  * DATA-ATTRIBUTE API (all optional, any element, any number of each)
@@ -80,7 +80,7 @@
 (function () {
   'use strict';
   // Microsoft Store: setting productId (from Partner Center) switches every Store link to it.
-  var STORE = { productId: '', pfn: 'OrivonBrowser.OrivonBrowser_vv109psb4rm8a', name: 'Orivon Browser' };
+  var STORE = { productId: '9MXV3FNMFBP4', pfn: 'OrivonBrowser.OrivonBrowser_vv109psb4rm8a', name: 'Orivon Browser' };
   var WINGET_ID = 'Orivon.Browser.Preview';
   var MAC_CMD = 'curl -fsSL https://raw.githubusercontent.com/OrivonBrowser/orivon-mvp/main/scripts/install-macos.sh | bash';
   var MAC_CMD_SHORT = 'curl -fsSL \u2026/install-macos.sh | bash';
