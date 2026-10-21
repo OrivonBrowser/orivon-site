@@ -2,16 +2,20 @@
 //   npm run check-page
 // Uses the Playwright of PLAYWRIGHT_DIR (default: the orivon-mvp checkout next to this one); skips (exit 0)
 // when none is found. Serves site/ on a loopback port, answers api.github.com with a fake release, and fails
-// on any other third-party request. No window is opened.
+// on any other third-party request. Then the Web3 build (built here, served at /web3/): it must ask only
+// latest.orivonstack.eth.limo, answered with a fake start page, and offer every package from there. No window is opened.
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
 import { join, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
+import { startPage, V009, V009_TAGGED } from './latest-page.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const site = join(root, 'site');
+const site3 = join(root, 'build-web3');
 const pwDir = process.env.PLAYWRIGHT_DIR || join(root, '..', 'orivon-mvp');
 let chromium;
 try {
@@ -20,11 +24,14 @@ try {
   console.log('page-check: Playwright not found (set PLAYWRIGHT_DIR); skipped');
   process.exit(0);
 }
+const built = spawnSync(process.execPath, [join(root, 'scripts', 'build.mjs'), '--web3'], { encoding: 'utf8' });
+if (built.status !== 0) { console.log('page-check: npm run build:web3 failed\n' + built.stderr); process.exit(1); }
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.woff2': 'font/woff2', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 const server = createServer((req, res) => {
   const p = new URL(req.url, 'http://x').pathname;
-  const file = join(site, p === '/' ? 'index.html' : p.replace(/\.\./g, ''));
+  const [dir, rel] = p.startsWith('/web3/') ? [site3, p.slice(5)] : [site, p];
+  const file = join(dir, rel === '/' ? 'index.html' : rel.replace(/\.\./g, ''));
   if (!existsSync(file)) { res.writeHead(404).end(); return; }
   res.writeHead(200, { 'content-type': TYPES[extname(file)] || 'application/octet-stream' }).end(readFileSync(file));
 });
@@ -50,18 +57,23 @@ const UA = {
 const browser = await chromium.launch({ headless: true });
 const foreign = new Set();
 let failures = 0;
-async function scenario(name, { os, query, tagged = true, js = true, openInOrivon = false }, check) {
+const LATEST = 'https://latest.orivonstack.eth.limo/';
+// web3: the Web3 build, whose latest folder answers with the v0.0.9 start page (latest: 'down' makes it unreachable).
+async function scenario(name, { os, query, tagged = true, js = true, openInOrivon = false, web3 = false, latest = 'up' }, check) {
   const ctx = await browser.newContext({ userAgent: UA[os], javaScriptEnabled: js, viewport: { width: 1200, height: 900 } });
   const page = await ctx.newPage();
-  page.on('request', (r) => { const h = new URL(r.url()).hostname; if (h !== '127.0.0.1' && h !== 'api.github.com') foreign.add(r.url()); });
+  const allowed = web3 ? 'latest.orivonstack.eth.limo' : 'api.github.com';
+  page.on('request', (r) => { const h = new URL(r.url()).hostname; if (h !== '127.0.0.1' && h !== allowed) foreign.add(r.url()); });
   await page.route('https://api.github.com/**', (r) => r.fulfill({ json: releaseJson(tagged) }));
+  await page.route(LATEST + '**', (r) => latest === 'down' ? r.abort()
+    : r.fulfill({ contentType: 'text/html', headers: { 'access-control-allow-origin': '*' }, body: startPage('0.0.9', tagged ? [...V009, ...V009_TAGGED] : V009) }));
   if (openInOrivon) await page.route('**/orivon-download.js', async (r) => {
     const src = readFileSync(join(site, 'assets/js/orivon-download.js'), 'utf8').replace('var OPEN_IN_ORIVON = false;', 'var OPEN_IN_ORIVON = true;');
     r.fulfill({ contentType: 'text/javascript', body: src });
   });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto(base + query);
+  await page.goto(base + (web3 ? 'web3/' : '') + query);
   if (js) {
     await page.evaluate(() => window.OrivonDownload.ready);
     await page.waitForFunction(() => document.documentElement.dataset.os);
@@ -161,8 +173,49 @@ await scenario('JavaScript off: the plain download page', { os: 'win', query: '?
   assert.ok(await vis(page, '#download h2'));
 });
 
+// The Web3 build: every package from the latest folder, never from GitHub; the Store, winget and the macOS command stay.
+const BAKED = readFileSync(join(site, 'assets/js/orivon-download.js'), 'utf8').match(/var TAG = 'v([^']+)';/)[1];
+const hrefs = (page, sel) => page.locator(sel).evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+const shaShown = (page) => page.locator('[data-dl-sha]').evaluateAll((els) => els.filter((e) => !e.hidden).length);
+await scenario('web3, linux: the newest release in the folder, from the folder', { os: 'linux', query: '', web3: true }, async (page) => {
+  assert.equal(await page.locator('[data-dl="auto"]').first().getAttribute('href'), LATEST + 'orivon_0.0.9_amd64.deb');
+  assert.equal(await text(page, '[data-dl="detail"]'), 'v0.0.9 · Linux · .deb · 103 MB');
+  assert.equal(await page.locator('[data-dl="alt"]').getAttribute('href'), LATEST + 'Orivon-0.0.9-x86_64.AppImage');
+  assert.deepEqual(await hrefs(page, '[data-dl-asset]'), ['Orivon-Setup-0.0.9-x64.exe', 'Orivon-0.0.9-arm64.dmg', 'Orivon-0.0.9-x64.dmg',
+    'orivon_0.0.9_amd64.deb', 'Orivon-0.0.9-x86_64.AppImage'].map((n) => LATEST + n));
+  assert.equal(await text(page, '[data-dl-version]'), 'v0.0.9');
+  assert.equal(await shaShown(page), 0, 'the folder lists no digests: none is shown for a release newer than the baked one');
+  assert.equal(await vis(page, '[data-dl-ipfs]'), false);
+});
+await scenario('web3, windows: the Store first, the installer from the folder', { os: 'win', query: '', web3: true }, async (page) => {
+  assert.equal(await page.locator('[data-dl="auto"]').first().getAttribute('href'), STORE_APP);
+  assert.equal(await page.locator('#panel-win [data-dl-asset="win-x64"]').getAttribute('href'), LATEST + 'Orivon-Setup-0.0.9-x64.exe');
+  assert.equal(await text(page, '#cmd-winget'), 'winget install Orivon.Browser.Preview');
+});
+await scenario('web3, windows, tagged installer in the folder', { os: 'win', query: '?app=freetube', web3: true }, async (page) => {
+  assert.equal(await page.locator('[data-dl="auto"]').first().getAttribute('href'), LATEST + 'Orivon-Setup-0.0.9-x64.freetube.exe');
+  assert.equal(await page.locator('[data-app-offer="win"] [data-app-pkg]').getAttribute('href'), LATEST + 'Orivon-Setup-0.0.9-x64.freetube.exe');
+  assert.equal(await vis(page, '[data-app-offer="win"] [data-app-sha-row]'), false);
+});
+await scenario('web3, macOS: the .dmg from the folder, the install command as it is', { os: 'mac', query: '', web3: true }, async (page) => {
+  // Chromium tells the host's architecture: the .dmg for that one.
+  const arch = await page.evaluate(() => document.documentElement.dataset.arch);
+  assert.equal(await page.locator('[data-dl="alt"]').getAttribute('href'), LATEST + `Orivon-0.0.9-${arch}.dmg`);
+  assert.match(await text(page, '#cmd-mac'), /^curl -fsSL https:\/\/raw\.githubusercontent\.com\/OrivonBrowser\/orivon-mvp\/main\/scripts\/install-macos\.sh \| bash$/);
+});
+await scenario('web3, folder unreachable: the baked release, still from the folder', { os: 'linux', query: '', web3: true, latest: 'down' }, async (page) => {
+  assert.equal(await page.locator('[data-dl="auto"]').first().getAttribute('href'), LATEST + `orivon_${BAKED}_amd64.deb`);
+  assert.equal(await text(page, '[data-dl-version]'), 'v' + BAKED);
+  assert.equal(await shaShown(page), 5, 'the baked digests stay');
+  for (const h of await hrefs(page, '[data-dl-asset]')) assert.ok(h.startsWith(LATEST), h);
+});
+await scenario('web3, JavaScript off: the packages link to the folder', { os: 'linux', query: '', web3: true, js: false }, async (page) => {
+  for (const h of await hrefs(page, '[data-dl-asset]')) assert.ok(h.startsWith(LATEST), h);
+  assert.equal(await page.locator('[data-dl-store]').first().getAttribute('href'), STORE_WEB);
+});
+
 assert.deepEqual([...foreign], [], 'third-party requests');
 await browser.close();
 server.close();
 if (failures) { console.log(`page-check: ${failures} scenario(s) failed`); process.exit(1); }
-console.log('page-check: all scenarios passed; requests only to the page and api.github.com');
+console.log('page-check: all scenarios passed; requests only to the page and api.github.com (Web3 build: latest.orivonstack.eth.limo)');
