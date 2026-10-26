@@ -6,6 +6,8 @@
 //                                   pointed at its .eth.limo twin (see scripts/web3-links.mjs)
 //   node scripts/build.mjs --latest the redirect for latest.orivonstack.com -> build-latest/ (with the shared download
 //                                   scripts; deployed by the Pages workflow of its own repo)
+//   node scripts/build.mjs --eth    the page of the bare name orivonstack.eth -> build-eth/ (published on IPFS by hand,
+//                                   like build-web3/)
 import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -37,6 +39,19 @@ if (process.argv.includes('--latest')) {
   }
   writeFileSync(join(outL, 'CNAME'), 'latest.orivonstack.com\n');
   console.log('build: site-latest/ -> build-latest/ (CNAME latest.orivonstack.com)');
+}
+
+if (process.argv.includes('--eth')) {
+  // orivonstack.eth.limo is its own page, not a twin of www: two pages with the same content are one page to Google,
+  // so the bare name lists Orivon's .eth sites and keeps its own canonical, robots.txt and sitemap.xml.
+  const outE = join(root, 'build-eth');
+  rmSync(outE, { recursive: true, force: true });
+  cpSync(join(root, 'site-eth'), outE, { recursive: true });
+  for (const f of ['fonts/inter-normal-100-900.woff2', 'fonts/bricolage-grotesque-normal-200-800.woff2', 'img/icon-48.png']) {
+    mkdirSync(dirname(join(outE, 'assets', f)), { recursive: true });
+    cpSync(join(src, 'assets', f), join(outE, 'assets', f));
+  }
+  console.log('build: site-eth/ -> build-eth/ (the page of orivonstack.eth)');
 }
 
 if (process.argv.includes('--web3')) {
