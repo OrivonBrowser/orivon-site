@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>orivonstack.eth: Orivon's sites on ENS and IPFS</title>
+<meta name="description" content="Orivon's own sites, published on IPFS under orivonstack.eth names: the website and download page, the newest release files, the documentation, the status page and Orivon Explore. Open them in any browser through eth.limo, or in Orivon.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#cfe6f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1030" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://orivonstack.eth.limo/">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/img/icon-48.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://orivonstack.eth.limo/">
+<meta property="og:title" content="orivonstack.eth: Orivon's sites on ENS and IPFS">
+<meta property="og:description" content="The Orivon website, release files, documentation, status page and Explore, published on IPFS under orivonstack.eth names.">
+<link rel="preload" href="assets/fonts/inter-normal-100-900.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  @font-face { font-family: 'Inter'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('assets/fonts/inter-normal-100-900.woff2') format('woff2'); }
+  @font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 200 800; font-display: swap; src: url('assets/fonts/bricolage-grotesque-normal-200-800.woff2') format('woff2'); }
+  :root { --bg: #f4f8fc; --card: #ffffff; --ink: #14183a; --muted: #4a5078; --line: #d3e5f2; --link: #4a2fc4; --code: #eaf1f8; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0b1030; --card: #141a45; --ink: #e9ecff; --muted: #a9b0d6; --line: #2a3270; --link: #b9a8ff; --code: #1b2252; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 Inter, system-ui, sans-serif; }
+  main { max-width: 46rem; margin: 0 auto; padding: 48px 16px 64px; }
+  h1, h2 { font-family: 'Bricolage Grotesque', Inter, system-ui, sans-serif; line-height: 1.15; }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); margin: 0 0 12px; }
+  h2 { font-size: 1.4rem; margin: 40px 0 12px; }
+  .lede { font-size: 1.15rem; color: var(--muted); margin: 0 0 8px; }
+  a { color: var(--link); font-weight: 600; text-underline-offset: 3px; }
+  a:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; border-radius: 4px; }
+  code { font: 0.92em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--code); padding: 1px 6px; border-radius: 6px; overflow-wrap: anywhere; }
+  ul.sites { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  ul.sites li { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  ul.sites h3 { margin: 0 0 2px; font-size: 1.05rem; }
+  ul.sites p { margin: 4px 0 0; color: var(--muted); }
+  ul.sites .name { display: block; font: 0.9em ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); overflow-wrap: anywhere; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 0.95rem; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>orivonstack.eth</h1>
+    <p class="lede">The Orivon browser and the sites around it, published on IPFS and named on Ethereum. Open any of them in any browser through eth.limo, or in Orivon, which checks the name and every block on your machine.</p>
+  </header>
+
+  <section aria-labelledby="sites">
+    <h2 id="sites">Orivon's own sites</h2>
+    <ul class="sites">
+      <li>
+        <h3><a href="https://www.orivonstack.eth.limo/">The Orivon website</a></h3>
+        <span class="name">www.orivonstack.eth</span>
+        <p>What Orivon is, and the download page for Windows, macOS and Linux. The same site is at <a href="https://www.orivonstack.com/">www.orivonstack.com</a>.</p>
+      </li>
+      <li>
+        <h3><a href="https://download.orivonstack.eth.limo/">Download</a></h3>
+        <span class="name">download.orivonstack.eth</span>
+        <p>The website, opened at its download section.</p>
+      </li>
+      <li>
+        <h3><a href="https://latest.orivonstack.eth.limo/">Latest release files</a></h3>
+        <span class="name">latest.orivonstack.eth</span>
+        <p>The installers of the newest release, served from IPFS instead of GitHub, with a start page that lists them.</p>
+      </li>
+      <li>
+        <h3><a href="https://docs.orivonstack.eth.limo/">Documentation</a></h3>
+        <span class="name">docs.orivonstack.eth</span>
+        <p>How to use Orivon, what its permissions mean, how to publish an app, and the known limitations. The same pages are at <a href="https://docs.orivonstack.com/">docs.orivonstack.com</a>.</p>
+      </li>
+      <li>
+        <h3><a href="https://status.orivonstack.eth.limo/">Status</a></h3>
+        <span class="name">status.orivonstack.eth</span>
+        <p>Whether Orivon's IPFS sites, <code>ipns://</code> names, <code>.eth</code> names and releases are served right now, checked in your browser.</p>
+      </li>
+      <li>
+        <h3><a href="https://explore.orivonstack.eth.limo/">Orivon Explore</a></h3>
+        <span class="name">explore.orivonstack.eth</span>
+        <p>A directory of Web3 sites, with a Web3 badge on each card.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="open">
+    <h2 id="open">Open them in Orivon</h2>
+    <p>Paste an address such as <code>ipfs://docs.orivonstack.eth</code> into the address bar. A light client on your machine proves the <code>.eth</code> name, and every IPFS block is checked against its hash. Without Orivon yet, <a href="https://www.orivonstack.eth.limo/#download">download it here</a>.</p>
+  </section>
+
+  <section aria-labelledby="how">
+    <h2 id="how">How the names work</h2>
+    <p><code>orivonstack.eth</code> is an ENS name. Each name below it carries a content hash that points to a folder on IPFS, so the address names the content and not a server. In another browser, eth.limo reads the name for you and serves the folder. In Orivon your own machine does it, and checks the result.</p>
+  </section>
+
+  <footer>
+    <p><a href="https://www.orivonstack.com/">www.orivonstack.com</a> · <a href="https://docs.orivonstack.com/">docs.orivonstack.com</a> · <a href="https://github.com/OrivonBrowser/orivon-mvp">GitHub</a></p>
+  </footer>
+</main>
+</body>
+</html>
