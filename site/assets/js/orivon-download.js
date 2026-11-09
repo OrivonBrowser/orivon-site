@@ -5,7 +5,9 @@
  * (api.github.com, 4 s timeout, cached 15 min in sessionStorage). Without JS the page keeps
  * whatever static hrefs you wrote (hero -> #download, packages -> baked URLs, Store -> web link).
  * With LATEST set (the Web3 build) nothing comes from GitHub: every package downloads from the LATEST folder, and
- * the live release is the one that folder's start page lists (8 s timeout, no request to api.github.com).
+ * the live release is the one that folder's start page lists, with the digests and CID of its ipfs.json (8 s timeout,
+ * no request to api.github.com). Until then the page names no version: it offers the folder's version-free names
+ * (Orivon-Setup-latest-x64.exe), so a page published once keeps offering the newest release.
  *
  * CONFIG (top of the IIFE)
  *   STORE      Microsoft Store identity. productId (the id from Partner Center) makes every Store link open
@@ -51,12 +53,14 @@
  *   [data-dl-name="<key>"]  the file name, e.g. "Orivon-Setup-0.0.5-x64.exe".
  *   [data-dl-sha="<key>"]   first 8 hex + "…", title = full hex; with attribute data-full the full hex is the text.
  *                           Hidden if the live file has no known digest.
- *   [data-dl-version]       release tag, e.g. "v0.0.5".
+ *   [data-dl-version]       release tag, e.g. "v0.0.5"; "latest" while the Web3 build knows no version.
  *   [data-dl-date]          "6 Oct 2026" (en-GB).
  *   [data-dl-notes]         href = release page.
- *   [data-dl-source]        href = source tree at the release tag.
+ *   [data-dl-source]        href = source tree at the release tag (the repository while no version is known).
  *   [data-dl-ipfs]          text "ipfs://bafybe…35tu", title "ipfs://<cid>"; on an <a> also href "ipfs://<cid>".
  *                           Hidden (hidden=true) when no CID is known.
+ *   [data-dl-checksums]     a <dl> or its container: each <dt> hides with its <dd> when that value is hidden, and the
+ *                           whole element when it shows none.
  *
  * APP LINK  (?app=<id>, needs orivon-flavours.js; without it, or for any value not on its allowlist, nothing below happens)
  *   An allowlisted id (see orivon-flavours.js) makes the page offer that app. Only the allowlisted name is shown,
@@ -77,7 +81,8 @@
  *   <html data-os="win|mac|linux|mobile|unknown" data-arch="arm64|x64|" data-platform="<asset key>|">
  *     (data-os / data-platform are set synchronously at load; Apple silicon vs Intel refined shortly after.)
  *   window.OrivonDownload = { os, platform, release, ready: Promise, app: the ?app= entry or null, buildRelease(list),
- *     buildLatest(html) }  (ready resolves after the live apply or after the live fetch failed and the fallback stays).
+ *     buildLatest(html, manifest) }  (ready resolves after the live apply or after the live fetch failed and the
+ *     fallback stays).
  *   document event "orivon:download-ready", detail {source: "fallback" | "api" | "latest"}, fired after every apply.
  *   Never throws or logs to the console: API down, storage blocked, clipboard denied, missing elements are all fine.
  */
@@ -133,12 +138,21 @@
   };
   // release:end
 
-  // The latest folder holds the release's files under their own names.
-  function onLatest(a) { return { name: a.name, url: LATEST + a.name, size: a.size, sha: a.sha }; }
+  // The latest folder holds the newest release's files twice: under their own names, and with `latest` in place of
+  // the version (orivon-mvp scripts/pin-releases.sh): Orivon-Setup-latest-x64.exe, orivon_latest_amd64.deb. Until its
+  // start page is read, the Web3 build offers those names, and no version, size, digest or CID that could be stale.
+  var BAKED = FALLBACK;
+  function unversioned(name, tag) {
+    var v = tag.replace(/^v/, ''), dash = '-' + v + '-';
+    return name.indexOf(dash) >= 0 ? name.replace(dash, '-latest-') : name.replace('_' + v + '_', '_latest_');
+  }
+  function onLatest(a) { var n = unversioned(a.name, BAKED.tag); return { name: n, url: LATEST + n, size: 0, sha: '' }; }
   if (LATEST) {
-    KEYS.forEach(function (key) { FALLBACK.assets[key] = onLatest(FALLBACK.assets[key]); });
-    Object.keys(FALLBACK.tagged).forEach(function (id) {
-      Object.keys(FALLBACK.tagged[id]).forEach(function (key) { FALLBACK.tagged[id][key] = onLatest(FALLBACK.tagged[id][key]); });
+    FALLBACK = { tag: '', published: '', url: GH + '/releases/latest', cid: '', assets: {}, tagged: {} };
+    KEYS.forEach(function (key) { FALLBACK.assets[key] = onLatest(BAKED.assets[key]); });
+    Object.keys(BAKED.tagged).forEach(function (id) {
+      FALLBACK.tagged[id] = {};
+      Object.keys(BAKED.tagged[id]).forEach(function (key) { FALLBACK.tagged[id][key] = onLatest(BAKED.tagged[id][key]); });
     });
   }
 
@@ -231,37 +245,48 @@
 
   // ---- release model from the latest folder (the Web3 build) ----------------------------------
   // Its start page is written by orivon-mvp's release pinner (scripts/pin-releases.sh, start_page): <title>Orivon
-  // <version></title>, then <a href="./<file>" download><file></a> <span><n> MB</span> for each file. It lists no
-  // checksums, so a package keeps a digest only when it is the baked file; sizes are the whole MB that page shows.
+  // <version></title>, then <a href="./<file>" download><file></a> <span><n> MB</span> for each file; sizes are the
+  // whole MB that page shows. The digests and the CID come from the release's ipfs.json, which the pinner puts next
+  // to it (manifest, optional: older folders have none), or from the baked release when it is the same file.
   var SAFE_NAME = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
-  function buildLatest(html) {
+  function buildLatest(html, manifest) {
     if (typeof html !== 'string') return null;
     var title = /<title>Orivon ([0-9A-Za-z.+-]+)<\/title>/.exec(html);
     if (!title) return null;
-    var tag = 'v' + title[1], same = tag === FALLBACK.tag;
+    var tag = 'v' + title[1], same = tag === BAKED.tag;
     var files = [], re = /<a href="\.\/([^"]+)"[^>]*>[^<]*<\/a>(?:\s*<span>(\d+) MB<\/span>)?/g, m;
     while ((m = re.exec(html))) if (SAFE_NAME.test(m[1])) files.push({ name: m[1], size: m[2] ? +m[2] * 1e6 : 0 });
-    function record(f, b) { return b && b.name === f.name ? b : { name: f.name, url: LATEST + f.name, size: f.size, sha: '' }; }
+    var shas = {}, listed = manifest && Array.isArray(manifest.files) ? manifest.files : [];
+    listed.forEach(function (e) {
+      if (e && typeof e.name === 'string' && /^[0-9a-f]{64}$/.test(e.sha256 || '')) shas[e.name] = e.sha256;
+    });
+    // The CID counts only when the manifest is this release's: it names every file the start page lists.
+    var cid = files.length && files.every(function (f) { return shas[f.name]; }) && /^baf[a-z2-7]+$/.test(manifest.cid || '')
+      ? manifest.cid : same ? BAKED.cid : '';
+    function record(f, b) {
+      b = b && b.name === f.name ? b : null;
+      return { name: f.name, url: LATEST + f.name, size: b ? b.size : f.size, sha: shas[f.name] || (b ? b.sha : '') };
+    }
     var assets = {}, any = false;
     KEYS.forEach(function (key) {
       var f = null;
       for (var i = 0; i < files.length && !f; i++) if (PATTERNS[key].test(files[i].name)) f = files[i];
       if (f) any = true;
-      assets[key] = f ? record(f, FALLBACK.assets[key]) : FALLBACK.assets[key];
+      assets[key] = f ? record(f, BAKED.assets[key]) : FALLBACK.assets[key];
     });
     if (!any) return null;
     var tagged = {};
     if (F) files.forEach(function (f) {
       ['win-x64', 'linux-appimage'].forEach(function (key) {
         var id = F.taggedId(key, f.name);
-        if (id) (tagged[id] = tagged[id] || {})[key] = record(f, FALLBACK.tagged[id] && FALLBACK.tagged[id][key]);
+        if (id) (tagged[id] = tagged[id] || {})[key] = record(f, BAKED.tagged[id] && BAKED.tagged[id][key]);
       });
     });
     return {
       tag: tag,
-      published: same ? FALLBACK.published : '',
+      published: same ? BAKED.published : '',
       url: GH + '/releases/tag/' + tag,
-      cid: same ? FALLBACK.cid : '',
+      cid: cid,
       assets: assets,
       tagged: tagged
     };
@@ -304,7 +329,8 @@
     if (heroMode(hp) === 'store') return 'Free on the Microsoft Store \u00b7 Windows 10 and 11';
     if (!hp) return 'For Linux, Windows and macOS';
     var label = { 'win-x64': 'Windows · .exe', 'mac-arm64': 'macOS · Apple silicon', 'mac-x64': 'macOS · Intel', 'linux-deb': 'Linux · .deb', 'linux-appimage': 'Linux · AppImage' }[hp.key];
-    return rel.tag + ' · ' + label + ' · ' + mb(hp.asset.size) + (hp.tagged ? ' · opens ' + APP.name : '');
+    // Before the Web3 build has read the folder there is no version or size to name.
+    return [rel.tag, label, mb(hp.asset.size), hp.tagged ? 'opens ' + APP.name : ''].filter(Boolean).join(' · ');
   }
 
   // ---- the ?app= block -------------------------------------------------------------------------
@@ -419,16 +445,26 @@
         setText(el, el.hasAttribute('data-full') ? x.sha : x.sha.slice(0, 8) + '…');
         el.title = x.sha;
       });
-      all('[data-dl-version]').forEach(function (el) { setText(el, rel.tag); });
+      all('[data-dl-version]').forEach(function (el) { setText(el, rel.tag || 'latest'); });
       all('[data-dl-date]').forEach(function (el) { var d = fmtDate(rel.published); if (d) setText(el, d); });
       all('[data-dl-notes]').forEach(function (el) { el.setAttribute('href', rel.url); });
-      all('[data-dl-source]').forEach(function (el) { el.setAttribute('href', GH + '/tree/' + rel.tag); });
+      all('[data-dl-source]').forEach(function (el) { el.setAttribute('href', rel.tag ? GH + '/tree/' + rel.tag : GH); });
       all('[data-dl-ipfs]').forEach(function (el) {
         if (!rel.cid) { el.hidden = true; return; }
         el.hidden = false; el.removeAttribute('hidden');
         setText(el, 'ipfs://' + rel.cid.slice(0, 6) + '…' + rel.cid.slice(-4));
         el.title = 'ipfs://' + rel.cid;
         if (el.tagName === 'A') el.setAttribute('href', 'ipfs://' + rel.cid);
+      });
+      all('[data-dl-checksums]').forEach(function (box) {
+        var shown = 0;
+        all('dd', box).forEach(function (dd) {
+          var v = dd.querySelector('[data-dl-ipfs]') || dd, off = !!v.hidden, dt = dd.previousElementSibling;
+          dd.hidden = off;
+          if (dt && dt.tagName === 'DT') dt.hidden = off;
+          if (!off) shown++;
+        });
+        box.hidden = !shown;
       });
     } catch (e) {}
     try {
@@ -554,9 +590,13 @@
       return read(res);
     }).then(function (data) { clearTimeout(timer); return data; }, function () { clearTimeout(timer); return null; });
   }
-  // The Web3 build reads the latest folder's start page (the gateway's own cache applies); the Web2 build the API.
+  // The Web3 build reads the latest folder's start page and ipfs.json (the gateway's own cache applies); the Web2
+  // build the API.
   function fetchLive() {
-    if (LATEST) return get(LATEST, {}, function (res) { return res.text(); });
+    if (LATEST) {
+      return Promise.all([get(LATEST, {}, function (res) { return res.text(); }),
+        get(LATEST + 'ipfs.json', {}, function (res) { return res.json(); })]);
+    }
     var cached = readCache();
     if (cached) return Promise.resolve(cached);
     return get(API, { headers: { Accept: 'application/vnd.github+json' } }, function (res) { return res.json(); }).then(function (data) {
@@ -588,7 +628,7 @@
   });
 
   api.ready = refined.then(fetchLive).then(function (data) {
-    var rel = LATEST ? buildLatest(data) : buildRelease(data);
+    var rel = LATEST ? buildLatest(data[0], data[1]) : buildRelease(data);
     apply(rel || state.release, rel ? (LATEST ? 'latest' : 'api') : state.source);
     return api;
   }).catch(function () { return api; });
