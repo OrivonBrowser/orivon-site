@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orivon 0.0.8</title>
+<meta name="color-scheme" content="light dark">
+<style>
+  :root { --bg: #f4f8fc; --ink: #14183a; --muted: #4a5078; --link: #4a2fc4; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0b1030; --ink: #e9ecff; --muted: #a9b0d6; --link: #b9a8ff; } }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--ink); font: 17px/1.5 system-ui, sans-serif; }
+  main { max-width: 36rem; padding: 0 16px; overflow-wrap: anywhere; }
+  a { color: var(--link); font-weight: 600; }
+  li span { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<h1>Orivon 0.0.8</h1>
+<p id="msg">Choose the package for your system:</p>
+<ul>
+<li><a href="./Orivon-0.0.8-arm64.dmg" download>Orivon-0.0.8-arm64.dmg</a> <span>163 MB</span></li>
+<li><a href="./Orivon-0.0.8-x64.dmg" download>Orivon-0.0.8-x64.dmg</a> <span>170 MB</span></li>
+<li><a href="./Orivon-0.0.8-x86_64.AppImage" download>Orivon-0.0.8-x86_64.AppImage</a> <span>162 MB</span></li>
+<li><a href="./Orivon-Setup-0.0.8-x64.exe" download>Orivon-Setup-0.0.8-x64.exe</a> <span>137 MB</span></li>
+<li><a href="./orivon_0.0.8_amd64.deb" download>orivon_0.0.8_amd64.deb</a> <span>125 MB</span></li>
+</ul>
+<p>Windows: the <code>.exe</code>. macOS: the <code>.dmg</code>, <code>arm64</code> for Apple silicon. Linux: the <code>.deb</code> or the <code>.AppImage</code>.</p>
+</main>
+<script>
+  (function () {
+    var nav = navigator, ua = nav.userAgent || '', plat = '', touch = nav.maxTouchPoints || 0;
+    try { plat = (nav.userAgentData && nav.userAgentData.platform) || nav.platform || ''; } catch (e) {}
+    var both = plat + ' ' + ua;
+    var os = /Android|iPhone|iPad|iPod/i.test(ua) || (/Mac/.test(plat) && touch > 1) ? ''
+      : /Win/.test(both) ? 'win' : /Mac/.test(both) ? 'mac'
+      : /Linux|X11|CrOS/.test(both) && !/aarch64|armv\d/i.test(both) ? 'linux' : '';
+    var want = { win: /^Orivon-Setup-.+-x64\.exe$/, mac: /^Orivon-.+-arm64\.dmg$/, linux: /^orivon_.+_amd64\.deb$/ }[os];
+    function start (re) {
+      var links = document.querySelectorAll('li a');
+      for (var i = 0; re && i < links.length; i++) {
+        if (!re.test(links[i].textContent)) continue;
+        document.getElementById('msg').textContent = 'Your download of ' + links[i].textContent + ' is starting. If it does not, choose the package for your system:';
+        links[i].click();
+        return;
+      }
+    }
+    // Apple silicon or Intel: only Chromium-based browsers tell; the others get the Apple silicon package.
+    var arch = Promise.resolve('');
+    try { if (os === 'mac' && nav.userAgentData && nav.userAgentData.getHighEntropyValues) arch = nav.userAgentData.getHighEntropyValues(['architecture']).then(function (v) { return v.architecture; }, function () { return ''; }); } catch (e) {}
+    arch.then(function (a) { start(os === 'mac' && a === 'x86' ? /^Orivon-.+-x64\.dmg$/ : want); });
+  })();
+</script>
+</body>
+</html>

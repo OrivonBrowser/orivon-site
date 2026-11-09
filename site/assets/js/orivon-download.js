@@ -4,11 +4,17 @@
  * Works with a baked fallback release (TAG below) immediately, then upgrades to the live GitHub release
  * (api.github.com, 4 s timeout, cached 15 min in sessionStorage). Without JS the page keeps
  * whatever static hrefs you wrote (hero -> #download, packages -> baked URLs, Store -> web link).
+ * With LATEST set (the Web3 build) nothing comes from GitHub: every package downloads from the LATEST folder, and
+ * the live release is the one that folder's start page lists, with the digests and CID of its ipfs.json (8 s timeout,
+ * no request to api.github.com). Until then the page names no version: it offers the folder's version-free names
+ * (Orivon-Setup-latest-x64.exe), so a page published once keeps offering the newest release.
  *
  * CONFIG (top of the IIFE)
  *   STORE      Microsoft Store identity. productId (the id from Partner Center) makes every Store link open
  *              Orivon's Store page; without it the package family name (pfn) and a Store search are used.
  *   WINGET_ID  the winget package id, MAC_CMD  the one-line macOS install command.
+ *   LATEST     '' (GitHub), or the address of the folder that always holds the newest release, with a trailing
+ *              slash. scripts/build.mjs --web3 sets it to latest.orivonstack.eth; keep it '' here.
  *
  * DATA-ATTRIBUTE API (all optional, any element, any number of each)
  *   [data-dl="auto"]     Hero button. Its href and action depend on the detected OS:
@@ -47,12 +53,14 @@
  *   [data-dl-name="<key>"]  the file name, e.g. "Orivon-Setup-0.0.5-x64.exe".
  *   [data-dl-sha="<key>"]   first 8 hex + "…", title = full hex; with attribute data-full the full hex is the text.
  *                           Hidden if the live file has no known digest.
- *   [data-dl-version]       release tag, e.g. "v0.0.5".
+ *   [data-dl-version]       release tag, e.g. "v0.0.5"; "latest" while the Web3 build knows no version.
  *   [data-dl-date]          "6 Oct 2026" (en-GB).
  *   [data-dl-notes]         href = release page.
- *   [data-dl-source]        href = source tree at the release tag.
+ *   [data-dl-source]        href = source tree at the release tag (the repository while no version is known).
  *   [data-dl-ipfs]          text "ipfs://bafybe…35tu", title "ipfs://<cid>"; on an <a> also href "ipfs://<cid>".
  *                           Hidden (hidden=true) when no CID is known.
+ *   [data-dl-checksums]     a <dl> or its container: each <dt> hides with its <dd> when that value is hidden, and the
+ *                           whole element when it shows none.
  *
  * APP LINK  (?app=<id>, needs orivon-flavours.js; without it, or for any value not on its allowlist, nothing below happens)
  *   An allowlisted id (see orivon-flavours.js) makes the page offer that app. Only the allowlisted name is shown,
@@ -72,9 +80,10 @@
  * OUTPUTS
  *   <html data-os="win|mac|linux|mobile|unknown" data-arch="arm64|x64|" data-platform="<asset key>|">
  *     (data-os / data-platform are set synchronously at load; Apple silicon vs Intel refined shortly after.)
- *   window.OrivonDownload = { os, platform, release, ready: Promise, app: the ?app= entry or null, buildRelease(list) }  (ready resolves after the live apply
- *     or after the live fetch failed and the fallback stays).
- *   document event "orivon:download-ready", detail {source: "fallback" | "api"}, fired after every apply.
+ *   window.OrivonDownload = { os, platform, release, ready: Promise, app: the ?app= entry or null, buildRelease(list),
+ *     buildLatest(html, manifest) }  (ready resolves after the live apply or after the live fetch failed and the
+ *     fallback stays).
+ *   document event "orivon:download-ready", detail {source: "fallback" | "api" | "latest"}, fired after every apply.
  *   Never throws or logs to the console: API down, storage blocked, clipboard denied, missing elements are all fine.
  */
 (function () {
@@ -86,6 +95,8 @@
   var MAC_CMD_SHORT = 'curl -fsSL \u2026/install-macos.sh | bash';
   // The "Open in Orivon" link needs a released Orivon that handles orivon: links. Keep false until one is out.
   var OPEN_IN_ORIVON = false;
+  // Where the packages download from: '' is the GitHub release; the Web3 build sets the latest.orivonstack.eth folder.
+  var LATEST = '';
   var F = window.OrivonFlavours || null;
   var APP = null;
   try { APP = F ? F.parseApp(location.search) : null; } catch (e) { APP = null; }
@@ -96,7 +107,8 @@
   var REPO = 'OrivonBrowser/orivon-mvp';
   var GH = 'https://github.com/' + REPO;
   var API = 'https://api.github.com/repos/' + REPO + '/releases?per_page=10';
-  var CACHE_KEY = 'orivon-dl-v1', CACHE_MS = 15 * 60 * 1000, TIMEOUT_MS = 4000;
+  // eth.limo may first have to resolve the IPNS name behind latest.orivonstack.eth, hence the longer wait there.
+  var CACHE_KEY = 'orivon-dl-v1', CACHE_MS = 15 * 60 * 1000, TIMEOUT_MS = LATEST ? 8000 : 4000;
   var KEYS = ['win-x64', 'mac-arm64', 'mac-x64', 'linux-deb', 'linux-appimage'];
   var PATTERNS = {
     'win-x64': /^Orivon-Setup-.+-x64\.exe$/,
@@ -106,25 +118,43 @@
     'linux-appimage': /^Orivon-.+-x86_64\.AppImage$/
   };
   // release:begin (generated by scripts/sync-release.mjs, do not edit by hand)
-  var TAG = 'v0.0.8';
+  var TAG = 'v0.1.0';
   function baked(file, size, sha) {
     return { name: file, url: GH + '/releases/download/' + TAG + '/' + file, size: size, sha: sha };
   }
   var FALLBACK = {
     tag: TAG,
-    published: '2026-10-17T18:10:52Z',
+    published: '2026-11-05T12:42:52Z',
     url: GH + '/releases/tag/' + TAG,
-    cid: 'bafybeib4liozf4uwoq57zklkldjtfx5e7u65yl2e4prn3evpl6si3qgwr4',
+    cid: 'bafybeidyxrss4ztdgfimz2egbcn4jevgeky3pl73kfhxrnz46exrmvafke',
     assets: {
-      'win-x64': baked('Orivon-Setup-0.0.8-x64.exe', 136692189, 'aaf02abe8a63433eb808bd7607f80aba1d416f804930fda88a84e5caed2866c2'),
-      'mac-arm64': baked('Orivon-0.0.8-arm64.dmg', 163494340, '92175230dbc1802563edd481458e6fe41a4560133bafde9a4efa7002cbc5a7ec'),
-      'mac-x64': baked('Orivon-0.0.8-x64.dmg', 170324820, '98ff5a0265cb11291a962b0d23252b9d9e55b2113b055b8ca14348672a8cba62'),
-      'linux-deb': baked('orivon_0.0.8_amd64.deb', 125166248, '985b53fd5dfb2d45884e26bdde0ace27cc32adfe34b316cf7b7097ad873a3a96'),
-      'linux-appimage': baked('Orivon-0.0.8-x86_64.AppImage', 161767956, 'f555b52a5a284843655b9c94f2137ac6a0b66248f433ef7e2e0ab8d8e7b3be28')
+      'win-x64': baked('Orivon-Setup-0.1.0-x64.exe', 138145295, '8d68a736a0ceec481f4948fb40261643cdda972c654a60587c7885459c78b219'),
+      'mac-arm64': baked('Orivon-0.1.0-arm64.dmg', 166076050, '0d20dd04f8ba999099289737a57de296da893e342d8ebc0a2919ff0727c24b14'),
+      'mac-x64': baked('Orivon-0.1.0-x64.dmg', 172971718, '1fc8535d985f82ed22d84cea6c9300fa6467367231bd0e7896895fc38c50868e'),
+      'linux-deb': baked('orivon_0.1.0_amd64.deb', 127059532, 'e4266f65f53e7396bb81fa14da65b8a7e236a4920038d2fdbc8685e55b12d885'),
+      'linux-appimage': baked('Orivon-0.1.0-x86_64.AppImage', 163819712, '2e63ca8a8bea7f81391324ad5fa3965316077637190aada6966b82809efe1924')
     },
     tagged: {}
   };
   // release:end
+
+  // The latest folder holds the newest release's files twice: under their own names, and with `latest` in place of
+  // the version (orivon-mvp scripts/pin-releases.sh): Orivon-Setup-latest-x64.exe, orivon_latest_amd64.deb. Until its
+  // start page is read, the Web3 build offers those names, and no version, size, digest or CID that could be stale.
+  var BAKED = FALLBACK;
+  function unversioned(name, tag) {
+    var v = tag.replace(/^v/, ''), dash = '-' + v + '-';
+    return name.indexOf(dash) >= 0 ? name.replace(dash, '-latest-') : name.replace('_' + v + '_', '_latest_');
+  }
+  function onLatest(a) { var n = unversioned(a.name, BAKED.tag); return { name: n, url: LATEST + n, size: 0, sha: '' }; }
+  if (LATEST) {
+    FALLBACK = { tag: '', published: '', url: GH + '/releases/latest', cid: '', assets: {}, tagged: {} };
+    KEYS.forEach(function (key) { FALLBACK.assets[key] = onLatest(BAKED.assets[key]); });
+    Object.keys(BAKED.tagged).forEach(function (id) {
+      FALLBACK.tagged[id] = {};
+      Object.keys(BAKED.tagged[id]).forEach(function (key) { FALLBACK.tagged[id][key] = onLatest(BAKED.tagged[id][key]); });
+    });
+  }
 
   var doc = document, root = doc.documentElement, nav = navigator;
 
@@ -143,7 +173,7 @@
   }
   var det = detect();
   var state = { os: det.os, platform: det.platform, release: FALLBACK, source: 'fallback' };
-  var api = window.OrivonDownload = { os: det.os, platform: det.platform, release: FALLBACK, ready: null, app: APP, buildRelease: null };
+  var api = window.OrivonDownload = { os: det.os, platform: det.platform, release: FALLBACK, ready: null, app: APP, buildRelease: null, buildLatest: null };
 
   function archOf(p) {
     return p === 'mac-arm64' ? 'arm64' : (p === 'win-x64' || p === 'mac-x64' || p === 'linux-deb') ? 'x64' : '';
@@ -213,7 +243,57 @@
     };
   }
 
+  // ---- release model from the latest folder (the Web3 build) ----------------------------------
+  // Its start page is written by orivon-mvp's release pinner (scripts/pin-releases.sh, start_page): <title>Orivon
+  // <version></title>, then <a href="./<file>" download><file></a> <span><n> MB</span> for each file; sizes are the
+  // whole MB that page shows. The digests and the CID come from the release's ipfs.json, which the pinner puts next
+  // to it (manifest, optional: older folders have none), or from the baked release when it is the same file.
+  var SAFE_NAME = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
+  function buildLatest(html, manifest) {
+    if (typeof html !== 'string') return null;
+    var title = /<title>Orivon ([0-9A-Za-z.+-]+)<\/title>/.exec(html);
+    if (!title) return null;
+    var tag = 'v' + title[1], same = tag === BAKED.tag;
+    var files = [], re = /<a href="\.\/([^"]+)"[^>]*>[^<]*<\/a>(?:\s*<span>(\d+) MB<\/span>)?/g, m;
+    while ((m = re.exec(html))) if (SAFE_NAME.test(m[1])) files.push({ name: m[1], size: m[2] ? +m[2] * 1e6 : 0 });
+    var shas = {}, listed = manifest && Array.isArray(manifest.files) ? manifest.files : [];
+    listed.forEach(function (e) {
+      if (e && typeof e.name === 'string' && /^[0-9a-f]{64}$/.test(e.sha256 || '')) shas[e.name] = e.sha256;
+    });
+    // The CID counts only when the manifest is this release's: it names every file the start page lists.
+    var cid = files.length && files.every(function (f) { return shas[f.name]; }) && /^baf[a-z2-7]+$/.test(manifest.cid || '')
+      ? manifest.cid : same ? BAKED.cid : '';
+    function record(f, b) {
+      b = b && b.name === f.name ? b : null;
+      return { name: f.name, url: LATEST + f.name, size: b ? b.size : f.size, sha: shas[f.name] || (b ? b.sha : '') };
+    }
+    var assets = {}, any = false;
+    KEYS.forEach(function (key) {
+      var f = null;
+      for (var i = 0; i < files.length && !f; i++) if (PATTERNS[key].test(files[i].name)) f = files[i];
+      if (f) any = true;
+      assets[key] = f ? record(f, BAKED.assets[key]) : FALLBACK.assets[key];
+    });
+    if (!any) return null;
+    var tagged = {};
+    if (F) files.forEach(function (f) {
+      ['win-x64', 'linux-appimage'].forEach(function (key) {
+        var id = F.taggedId(key, f.name);
+        if (id) (tagged[id] = tagged[id] || {})[key] = record(f, BAKED.tagged[id] && BAKED.tagged[id][key]);
+      });
+    });
+    return {
+      tag: tag,
+      published: same ? BAKED.published : '',
+      url: GH + '/releases/tag/' + tag,
+      cid: cid,
+      assets: assets,
+      tagged: tagged
+    };
+  }
+
   api.buildRelease = buildRelease;
+  api.buildLatest = buildLatest;
 
   // ---- DOM binding -----------------------------------------------------------------------------
   function all(sel, from) { try { return Array.prototype.slice.call((from || doc).querySelectorAll(sel)); } catch (e) { return []; } }
@@ -249,7 +329,8 @@
     if (heroMode(hp) === 'store') return 'Free on the Microsoft Store \u00b7 Windows 10 and 11';
     if (!hp) return 'For Linux, Windows and macOS';
     var label = { 'win-x64': 'Windows · .exe', 'mac-arm64': 'macOS · Apple silicon', 'mac-x64': 'macOS · Intel', 'linux-deb': 'Linux · .deb', 'linux-appimage': 'Linux · AppImage' }[hp.key];
-    return rel.tag + ' · ' + label + ' · ' + mb(hp.asset.size) + (hp.tagged ? ' · opens ' + APP.name : '');
+    // Before the Web3 build has read the folder there is no version or size to name.
+    return [rel.tag, label, mb(hp.asset.size), hp.tagged ? 'opens ' + APP.name : ''].filter(Boolean).join(' · ');
   }
 
   // ---- the ?app= block -------------------------------------------------------------------------
@@ -364,16 +445,26 @@
         setText(el, el.hasAttribute('data-full') ? x.sha : x.sha.slice(0, 8) + '…');
         el.title = x.sha;
       });
-      all('[data-dl-version]').forEach(function (el) { setText(el, rel.tag); });
+      all('[data-dl-version]').forEach(function (el) { setText(el, rel.tag || 'latest'); });
       all('[data-dl-date]').forEach(function (el) { var d = fmtDate(rel.published); if (d) setText(el, d); });
       all('[data-dl-notes]').forEach(function (el) { el.setAttribute('href', rel.url); });
-      all('[data-dl-source]').forEach(function (el) { el.setAttribute('href', GH + '/tree/' + rel.tag); });
+      all('[data-dl-source]').forEach(function (el) { el.setAttribute('href', rel.tag ? GH + '/tree/' + rel.tag : GH); });
       all('[data-dl-ipfs]').forEach(function (el) {
         if (!rel.cid) { el.hidden = true; return; }
         el.hidden = false; el.removeAttribute('hidden');
         setText(el, 'ipfs://' + rel.cid.slice(0, 6) + '…' + rel.cid.slice(-4));
         el.title = 'ipfs://' + rel.cid;
         if (el.tagName === 'A') el.setAttribute('href', 'ipfs://' + rel.cid);
+      });
+      all('[data-dl-checksums]').forEach(function (box) {
+        var shown = 0;
+        all('dd', box).forEach(function (dd) {
+          var v = dd.querySelector('[data-dl-ipfs]') || dd, off = !!v.hidden, dt = dd.previousElementSibling;
+          dd.hidden = off;
+          if (dt && dt.tagName === 'DT') dt.hidden = off;
+          if (!off) shown++;
+        });
+        box.hidden = !shown;
       });
     } catch (e) {}
     try {
@@ -488,22 +579,30 @@
   function writeCache(data) {
     try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), data: data })); } catch (e) {}
   }
-  function fetchLive() {
-    var cached = readCache();
-    if (cached) return Promise.resolve(cached);
+  // Resolves to the body read by read(res), or null on any failure or after TIMEOUT_MS.
+  function get(url, opts, read) {
     if (typeof fetch !== 'function') return Promise.resolve(null);
     var ctl = typeof AbortController === 'function' ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctl) ctl.abort(); }, TIMEOUT_MS);
-    var opts = { headers: { Accept: 'application/vnd.github+json' } };
     if (ctl) opts.signal = ctl.signal;
-    return fetch(API, opts).then(function (res) {
+    return fetch(url, opts).then(function (res) {
       if (!res.ok) throw new Error('http');
-      return res.json();
-    }).then(function (data) {
-      clearTimeout(timer);
+      return read(res);
+    }).then(function (data) { clearTimeout(timer); return data; }, function () { clearTimeout(timer); return null; });
+  }
+  // The Web3 build reads the latest folder's start page and ipfs.json (the gateway's own cache applies); the Web2
+  // build the API.
+  function fetchLive() {
+    if (LATEST) {
+      return Promise.all([get(LATEST, {}, function (res) { return res.text(); }),
+        get(LATEST + 'ipfs.json', {}, function (res) { return res.json(); })]);
+    }
+    var cached = readCache();
+    if (cached) return Promise.resolve(cached);
+    return get(API, { headers: { Accept: 'application/vnd.github+json' } }, function (res) { return res.json(); }).then(function (data) {
       if (Array.isArray(data)) writeCache(data);
       return data;
-    }).catch(function () { clearTimeout(timer); return null; });
+    });
   }
 
   var domReady = new Promise(function (resolve) {
@@ -529,8 +628,8 @@
   });
 
   api.ready = refined.then(fetchLive).then(function (data) {
-    var rel = buildRelease(data);
-    apply(rel || state.release, rel ? 'api' : state.source);
+    var rel = LATEST ? buildLatest(data[0], data[1]) : buildRelease(data);
+    apply(rel || state.release, rel ? (LATEST ? 'latest' : 'api') : state.source);
     return api;
   }).catch(function () { return api; });
 })();

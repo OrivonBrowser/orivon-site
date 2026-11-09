@@ -8,7 +8,8 @@
 // page links (pre-releases count, drafts and tags like "pre-releases" do not). It is written to:
 //   - site/index.html: the package hrefs, file names, sizes, checksums, IPFS CID, version label and links;
 //   - site/assets/js/orivon-download.js: the block between "release:begin" and "release:end", the fallback
-//     the page uses with JavaScript off, when api.github.com fails, and on the IPFS copy.
+//     the page uses with JavaScript off and when the live release cannot be read (the Web3 build offers the same
+//     files from latest.orivonstack.eth, see scripts/build.mjs).
 // A release may also carry the Windows installer and the Linux AppImage under a tagged name
 // (Orivon-Setup-<ver>-x64.<id>.exe, Orivon-<ver>-x86_64.<id>.AppImage) that opens the app <id> on first run.
 // When it does, they are recorded too (ids from site/assets/js/orivon-flavours.js only); none is fine.
