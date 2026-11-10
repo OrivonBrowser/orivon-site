@@ -61,6 +61,7 @@ let failures = 0;
 const LATEST = 'https://latest.orivonstack.eth.limo/';
 const CID_009 = 'bafybeidyxrss4ztdgfimz2egbcn4jevgeky3pl73kfhxrnz46exrmvafke';
 const digest009 = (i) => '0123456'[i].repeat(64);
+const framing = { 'x-frame-options': 'SAMEORIGIN', 'content-security-policy': "frame-ancestors 'self';" };
 // web3: the Web3 build, whose latest folder answers with the v0.0.9 start page and its ipfs.json. latest: 'old' is a
 // folder from before the pinner copied ipfs.json in (start page only), 'down' an unreachable one.
 async function scenario(name, { os, query, tagged = true, js = true, openInOrivon = false, web3 = false, latest = 'up' }, check) {
@@ -72,6 +73,10 @@ async function scenario(name, { os, query, tagged = true, js = true, openInOrivo
   const files = tagged ? [...V009, ...V009_TAGGED] : V009, cors = { 'access-control-allow-origin': '*' };
   await page.route(LATEST + '**', (r) => {
     if (latest === 'down') return r.abort();
+    // A package answers as eth.limo does, refusing to be framed: a download in a hidden frame still starts.
+    if (/\.(exe|dmg|deb|AppImage)$/.test(r.request().url())) {
+      return r.fulfill({ contentType: 'application/octet-stream', headers: { ...cors, ...framing }, body: 'package' });
+    }
     if (r.request().url() !== LATEST + 'ipfs.json') return r.fulfill({ contentType: 'text/html', headers: cors, body: startPage('0.0.9', files) });
     if (latest === 'old') return r.fulfill({ status: 404, headers: cors, body: '' });
     return r.fulfill({ headers: cors, json: { cid: CID_009, files: files.map(([n], i) => ({ name: n, sha256: digest009(i) })) } });
@@ -223,7 +228,7 @@ await scenario('web3, macOS: the .dmg from the folder, the install command as it
   assert.equal(await page.locator('[data-dl="alt"]').getAttribute('href'), LATEST + `Orivon-0.0.9-${arch}.dmg`);
   assert.match(await text(page, '#cmd-mac'), /^curl -fsSL https:\/\/raw\.githubusercontent\.com\/OrivonBrowser\/orivon-mvp\/main\/scripts\/install-macos\.sh \| bash$/);
 });
-// Read or not, the page never names a version, size or digest the folder may no longer hold.
+// Without JavaScript the page names no version, size or digest the folder may no longer hold.
 const noReleaseFacts = async (page) => {
   assert.deepEqual(await hrefs(page, '[data-dl-asset]'), UNVERSIONED.map((n) => LATEST + n));
   assert.equal(await text(page, '[data-dl-version]'), 'latest');
@@ -233,10 +238,23 @@ const noReleaseFacts = async (page) => {
   assert.equal(await vis(page, '[data-dl-checksums]'), false);
   assert.doesNotMatch(await page.locator('body').innerText(), new RegExp(BAKED.replace(/\./g, '\\.')));
 };
-await scenario('web3, folder unreachable: the version-free names, and no version, size or digest', { os: 'linux', query: '', web3: true, latest: 'down' }, async (page) => {
+await scenario('web3, folder unreachable: the baked version and sizes, the version-free names, no digest', { os: 'linux', query: '', web3: true, latest: 'down' }, async (page) => {
   assert.equal(await page.locator('[data-dl="auto"]').first().getAttribute('href'), LATEST + 'orivon_latest_amd64.deb');
-  assert.equal(await text(page, '[data-dl="detail"]'), 'Linux · .deb');
-  await noReleaseFacts(page);
+  assert.match(await text(page, '[data-dl="detail"]'), new RegExp(`^v${BAKED.replace(/\./g, '\\.')} · Linux · \\.deb · \\d+ MB$`));
+  assert.deepEqual(await hrefs(page, '[data-dl-asset]'), UNVERSIONED.map((n) => LATEST + n));
+  assert.equal(await text(page, '[data-dl-version]'), 'v' + BAKED);
+  assert.equal(await page.locator('[data-dl-notes]').getAttribute('href'), 'https://github.com/OrivonBrowser/orivon-mvp/releases/latest');
+  assert.equal(await vis(page, '[data-dl-checksums]'), false);
+});
+await scenario('web3, a click on a package downloads it and the visitor stays on the page', { os: 'linux', query: '', web3: true }, async (page) => {
+  const at = page.url();
+  for (const sel of ['[data-dl="auto"]', '#panel-linux [data-dl-asset="linux-appimage"]']) {
+    const dl = page.waitForEvent('download', { timeout: 10000 });
+    await page.locator(sel).first().click();
+    assert.equal((await dl).url(), await page.locator(sel).first().getAttribute('href'), sel);
+    assert.equal(page.url(), at, sel);
+  }
+  assert.equal(await page.locator('iframe[aria-hidden="true"][hidden]').count(), 2, 'each download went through a hidden frame');
 });
 await scenario('web3, JavaScript off: the version-free names in the folder', { os: 'linux', query: '', web3: true, js: false }, async (page) => {
   await noReleaseFacts(page);
