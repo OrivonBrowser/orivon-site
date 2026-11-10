@@ -6,8 +6,9 @@
  * whatever static hrefs you wrote (hero -> #download, packages -> baked URLs, Store -> web link).
  * With LATEST set (the Web3 build) nothing comes from GitHub: every package downloads from the LATEST folder, and
  * the live release is the one that folder's start page lists, with the digests and CID of its ipfs.json (8 s timeout,
- * no request to api.github.com). Until then the page names no version: it offers the folder's version-free names
- * (Orivon-Setup-latest-x64.exe), so a page published once keeps offering the newest release.
+ * no request to api.github.com). Until then the page shows the baked release's version and sizes (no digest or CID)
+ * and links to the folder's version-free names (Orivon-Setup-latest-x64.exe), so a page published once keeps offering
+ * the newest release. A plain click on a package link downloads it in a hidden frame, so the visitor stays on the page.
  *
  * CONFIG (top of the IIFE)
  *   STORE      Microsoft Store identity. productId (the id from Partner Center) makes every Store link open
@@ -140,15 +141,16 @@
 
   // The latest folder holds the newest release's files twice: under their own names, and with `latest` in place of
   // the version (orivon-mvp scripts/pin-releases.sh): Orivon-Setup-latest-x64.exe, orivon_latest_amd64.deb. Until its
-  // start page is read, the Web3 build offers those names, and no version, size, digest or CID that could be stale.
+  // start page is read, the Web3 build shows the baked version and sizes at once, but downloads those names, which a
+  // newer release keeps valid, and shows no digest or CID, which it would not.
   var BAKED = FALLBACK;
   function unversioned(name, tag) {
     var v = tag.replace(/^v/, ''), dash = '-' + v + '-';
     return name.indexOf(dash) >= 0 ? name.replace(dash, '-latest-') : name.replace('_' + v + '_', '_latest_');
   }
-  function onLatest(a) { var n = unversioned(a.name, BAKED.tag); return { name: n, url: LATEST + n, size: 0, sha: '' }; }
+  function onLatest(a) { return { name: a.name, url: LATEST + unversioned(a.name, BAKED.tag), size: a.size, sha: '' }; }
   if (LATEST) {
-    FALLBACK = { tag: '', published: '', url: GH + '/releases/latest', cid: '', assets: {}, tagged: {} };
+    FALLBACK = { tag: BAKED.tag, published: BAKED.published, url: GH + '/releases/latest', cid: '', assets: {}, tagged: {} };
     KEYS.forEach(function (key) { FALLBACK.assets[key] = onLatest(BAKED.assets[key]); });
     Object.keys(BAKED.tagged).forEach(function (id) {
       FALLBACK.tagged[id] = {};
@@ -547,13 +549,33 @@
       heroTimer = setTimeout(function () { heroCopied = false; apply(state.release, state.source); }, 4000);
     });
   }
+  // The Web3 build downloads a package in a hidden frame, so the visitor stays on the page: following the link would
+  // take the tab to another site, and Orivon opens a .eth.limo address in a tab as its .eth name, where a package
+  // does not download. A frame still loads through the gateway, in Orivon too.
+  function downloadHere(url) {
+    try {
+      var f = doc.createElement('iframe');
+      f.hidden = true; f.tabIndex = -1;
+      f.setAttribute('aria-hidden', 'true');
+      f.src = url;
+      doc.body.appendChild(f);
+      return true;
+    } catch (e) { return false; }
+  }
   doc.addEventListener('click', function (e) {
     try {
       var t = e.target && e.target.closest ? e.target : null;
       if (!t) return;
       var hero = t.closest('[data-dl="auto"]');
+      var plain = !(e.defaultPrevented || e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey);
+      var link = LATEST && plain ? t.closest('a[href]') : null, href = link ? link.getAttribute('href') || '' : '';
+      if (href.indexOf(LATEST) === 0 && href.length > LATEST.length && downloadHere(href)) {
+        e.preventDefault();
+        if (hero && state.os === 'win') onHeroDownload();
+        return;
+      }
       if (hero && (state.os === 'mac' || state.os === 'win')) {
-        if (e.defaultPrevented || e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        if (!plain) return;
         if (state.os === 'win') {
           // The link itself opens the Store or starts the download; a download adds the SmartScreen hint.
           if (hero.getAttribute('data-dl-mode') === 'file') onHeroDownload();

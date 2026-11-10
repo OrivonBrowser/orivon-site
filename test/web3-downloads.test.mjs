@@ -46,11 +46,13 @@ const CID_009 = 'bafybeidyxrss4ztdgfimz2egbcn4jevgeky3pl73kfhxrnz46exrmvafke';
 // Objects made inside the vm context have its own prototypes: compare plain copies.
 const plain = (x) => JSON.parse(JSON.stringify(x));
 
-test('the Web2 page downloads from GitHub, the Web3 one from the latest folder under version-free names', () => {
-  for (const k of KEYS) assert.match(load(SRC).release.assets[k].url, /^https:\/\/github\.com\/OrivonBrowser\/orivon-mvp\/releases\/download\//);
-  const rel = web3().release;
-  for (const k of KEYS) assert.deepEqual(plain(rel.assets[k]), { name: UNVERSIONED[k], url: LATEST + UNVERSIONED[k], size: 0, sha: '' }, k);
-  assert.deepEqual([rel.tag, rel.published, rel.cid, rel.url], ['', '', '', 'https://github.com/OrivonBrowser/orivon-mvp/releases/latest']);
+test('the Web2 page downloads from GitHub; the Web3 one shows the baked release at once and downloads the version-free names', () => {
+  const w2 = load(SRC).release, rel = web3().release;
+  for (const k of KEYS) assert.match(w2.assets[k].url, /^https:\/\/github\.com\/OrivonBrowser\/orivon-mvp\/releases\/download\//);
+  for (const k of KEYS) {
+    assert.deepEqual(plain(rel.assets[k]), { name: w2.assets[k].name, url: LATEST + UNVERSIONED[k], size: w2.assets[k].size, sha: '' }, k);
+  }
+  assert.deepEqual([rel.tag, rel.published, rel.cid, rel.url], [w2.tag, w2.published, '', 'https://github.com/OrivonBrowser/orivon-mvp/releases/latest']);
 });
 
 test('the real start page of the folder names the packages it holds', () => {
